@@ -5,15 +5,18 @@ on:
 
 jobs:
   build-angle:
-    name: ${{matrix.os}}
-    runs-on: ${{matrix.os}}
+    name: ${{matrix.arch}}-${{matrix.os}}-${{matric.config}}
+    runs-on: ${{matrix.os}}-latest
     strategy:
       matrix:
-        os: [windows-latest]
+        os: [windows]
+        config: [Release]
+        arch: [x64]
+
         include:
-          - os: windows-latest
-            triplet: x64-windows
-            vcpkgCommitId: '0591528cbfde14ccfd3900c3fb19aba382c05349'
+          - os: windows
+            config: Debug
+            arch: x64
 
     steps:
     - name: Checkout source code
@@ -22,14 +25,14 @@ jobs:
     - name: Run vcpkg
       uses: lukka/run-vcpkg@v2
       with:
-        vcpkgArguments: 'sqlite3'
-        vcpkgTriplet: '${{ matrix.triplet }}'
-        vcpkgDirectory: '${{ runner.workspace }}/b/vcpkg'
-        vcpkgGitCommitId: '${{ matrix.vcpkgCommitId }}'
+        vcpkgArguments: zlib
+        vcpkgTriplet: ${{matrix.arch}}-${{matrix.os}}
+        vcpkgDirectory: ${{runner.workspace}}/b/vcpkg
+        vcpkgGitCommitId: 0591528cbfde14ccfd3900c3fb19aba382c05349
 
-    - name: Build ANGLE
+    - name: CMake
       uses: lukka/run-cmake@v2
       with:
         cmakeListsOrSettingsJson: CMakeSettingsJson
         useVcpkgToolchainFile: true
-        configurationRegexFilter: 'x64-Debug'
+        configurationRegexFilter: ${{matrix.arch}}-${{matrix.config}}
