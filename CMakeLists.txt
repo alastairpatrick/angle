@@ -86,7 +86,7 @@ add_library(angle::image_util ALIAS angle_image_util)
 # angle::gpu_info_util
 set(ANGLE_GPU_INFO_UTIL_SOURCES src/gpu_info_util/SystemInfo.cpp)
 if(APPLE)
-  list(APPEND ANGLE_GPU_INFO_UTIL_SOURCES src/gpu_info_util/SystemInfo_mac.mm)
+  list(APPEND ANGLE_GPU_INFO_UTIL_SOURCES src/gpu_info_util/SystemInfo_macos.mm)
 elseif(WIN32)
   list(APPEND ANGLE_GPU_INFO_UTIL_SOURCES src/gpu_info_util/SystemInfo_win.cpp)
 elseif(ANDROID)
