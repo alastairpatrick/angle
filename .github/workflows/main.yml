@@ -16,6 +16,7 @@ jobs:
         include:
           - os: windows
             config: Debug
+            arch: x64
 
     steps:
     - name: Checkout source code
