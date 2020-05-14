@@ -40,7 +40,7 @@ jobs:
 
     - name: Install Ubuntu packages
       run: sudo apt-get install mesa-common-dev
-      if: ${{matrix.environment.startsWith("ubuntu")}}
+      if: ${{startsWith(matrix.environment, "ubuntu")}}
 
     - name: Run vcpkg
       uses: lukka/run-vcpkg@v2
