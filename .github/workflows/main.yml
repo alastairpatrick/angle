@@ -41,6 +41,8 @@ jobs:
     steps:
     - name: Checkout source code
       uses: actions/checkout@v2
+      with:
+          submodules: true
 
     - name: Install Ubuntu packages
       run: sudo apt-get install mesa-common-dev
