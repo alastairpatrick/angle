@@ -9,6 +9,8 @@ jobs:
     runs-on: ${{matrix.environment}}
     strategy:
       matrix:
+        os: [windows, linux, osx]
+
         include:
           - os: windows
             arch: x64
