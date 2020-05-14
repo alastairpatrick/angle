@@ -7,6 +7,10 @@ jobs:
   build-angle:
     name: ${{matrix.arch}}-${{matrix.os}}-${{matrix.config}}
     runs-on: ${{matrix.environment}}
+
+    env:
+        vcpkgResponseFile: ${{github.workspace}}/vcpkg-dependencies
+
     strategy:
       matrix:
         os: [windows, linux, osx]
@@ -45,10 +49,12 @@ jobs:
     - name: Run vcpkg
       uses: lukka/run-vcpkg@v2
       with:
-        vcpkgArguments: zlib
         vcpkgTriplet: ${{matrix.arch}}-${{matrix.os}}
-        vcpkgDirectory: ${{runner.workspace}}/b/vcpkg
-        vcpkgGitCommitId: 0591528cbfde14ccfd3900c3fb19aba382c05349
+        vcpkgArguments: '@${{env.vcpkgResponseFile}}'
+        vcpkgDirectory: '${{github.workspace}}/vcpkg'
+        # Since the cache must be invalidated when content of the response file changes, let's
+        # compute its hash and append this to the computed cache's key.
+        appendedCacheKey: ${{hashFiles(env.vcpkgResponseFile)}}
 
     - name: CMake
       uses: lukka/run-cmake@v2
