@@ -17,15 +17,12 @@ jobs:
           - os: windows
             osVersion: latest
 
-        include:
           - os: macos
             osVersion: latest
 
-        include:
           - os: ubuntu
             osVersion: 18.04
 
-        include:
           - os: windows
             config: Debug
 
