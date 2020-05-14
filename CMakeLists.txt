@@ -30,7 +30,7 @@ include_directories(include src ${CMAKE_CURRENT_BINARY_DIR}/include)
 
 if(MSVC)
     set(ANGLE_IGNORE_WARNINGS "/wd4200" "/wd4267" "/wd4305")
-elif(APPLE)
+elseif(APPLE)
     set(ANGLE_IGNORE_WARNINGS "-DGL_SILENCE_DEPRECATION")
 else()
     set(ANGLE_IGNORE_WARNINGS "")
