@@ -6,7 +6,7 @@ on:
 jobs:
   build-angle:
     name: ${{matrix.arch}}-${{matrix.os}}-${{matrix.config}}
-    runs-on: ${{matrix.os}}-${{matrix.osVersion}}
+    runs-on: ${{matrix.os}}-latest
     strategy:
       matrix:
         os: [windows, macos, ubuntu]
@@ -14,15 +14,6 @@ jobs:
         arch: [x64]
 
         include:
-          - os: windows
-            osVersion: latest
-
-          - os: macos
-            osVersion: latest
-
-          - os: ubuntu
-            osVersion: 18.04
-
           - os: windows
             config: Debug
 
