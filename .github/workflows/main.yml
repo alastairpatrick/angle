@@ -22,6 +22,7 @@ jobs:
     - name: Run vcpkg
       uses: lukka/run-vcpkg@v2
       with:
+        vcpkgArguments: 'sqlite3'
         vcpkgTriplet: '${{ matrix.triplet }}'
         vcpkgDirectory: '${{ runner.workspace }}/b/vcpkg'
         vcpkgGitCommitId: '${{ matrix.vcpkgCommitId }}'
