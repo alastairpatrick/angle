@@ -38,6 +38,10 @@ jobs:
     - name: Checkout source code
       uses: actions/checkout@v2
 
+    - name: Install Ubuntu packages
+      run: sudo apt-get install mesa-common-dev
+      if: ${{matrix.environment.startsWith("ubuntu")}}
+
     - name: Run vcpkg
       uses: lukka/run-vcpkg@v2
       with:
