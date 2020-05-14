@@ -5,7 +5,7 @@ on:
 
 jobs:
   build-angle:
-    name: ${{matrix.arch}}-${{matrix.os}}-${{matric.config}}
+    name: ${{matrix.arch}}-${{matrix.os}}-${{matrix.config}}
     runs-on: ${{matrix.os}}-latest
     strategy:
       matrix:
