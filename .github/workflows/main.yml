@@ -1,0 +1,24 @@
+name: Build ANGLE
+on:
+  - pull_request
+  - push
+
+jobs:
+  build-angle:
+    name: ${{matrix.os}}
+    runs-on: ${{matrix.os}}
+    strategy:
+      matrix:
+        os: [windows-latest]
+        include:
+          - os: windows-latest
+
+    steps:
+    - name: Checkout source code
+      uses: actions/checkout@v2
+
+    - name: Build ANGLE
+      uses: lukka/run-cmake@v2
+      with:
+          cmakeListsOrSettingsJson: CMakeSettingsJson
+          configurationRegexFilter: 'x64-Debug'
