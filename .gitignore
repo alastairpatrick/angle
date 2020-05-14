@@ -27,6 +27,9 @@
 .gclient
 .gclient_entries
 .git_cl_description_backup
+/CMakeCache.txt
+/cmake_install.cmake
+/CMakeFiles/
 /src/tests/third_party/gles_conformance_tests
 /testing
 /third_party/android_ndk
