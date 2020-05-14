@@ -6,17 +6,28 @@ on:
 jobs:
   build-angle:
     name: ${{matrix.arch}}-${{matrix.os}}-${{matrix.config}}
-    runs-on: ${{matrix.os}}-latest
+    runs-on: ${{matrix.os}}-${{matrix.osVersion}}
     strategy:
       matrix:
-        os: [windows]
+        os: [windows, macos, ubuntu]
         config: [Release]
         arch: [x64]
 
         include:
           - os: windows
+            osVersion: latest
+
+        include:
+          - os: macos
+            osVersion: latest
+
+        include:
+          - os: ubuntu
+            osVersion: 18.04
+
+        include:
+          - os: windows
             config: Debug
-            arch: x64
 
     steps:
     - name: Checkout source code
