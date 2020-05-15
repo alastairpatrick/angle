@@ -1,7 +1,9 @@
-#include <EGL/egl.h>
-#include <GLES2/gl2.h>
 #include <gtest/gtest.h>
 #include <vector>
+
+// On Linux, EGL/egl.h includes the X11 headers, which in turn define C macros, including one called "None" which conflicts with a struct in gtest.h. So put the EGL/GL includes last.
+#include <EGL/egl.h>
+#include <GLES2/gl2.h>
 
 TEST(NativeSmokeTest, NativeSmokeTest) {
   const int width = 16;
