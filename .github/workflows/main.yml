@@ -10,6 +10,7 @@ jobs:
 
     env:
       vcpkgResponseFile: ${{github.workspace}}/vcpkg-dependencies
+      buildDirectory: ${{runner.workspace}}/out/build
 
     strategy:
       fail-fast: false
@@ -36,7 +37,7 @@ jobs:
             submodules: true
 
       - name: Install Ubuntu packages
-        run: sudo apt-get install libx11-dev xserver-xorg xinit libgl1-mesa-dev mesa-utils
+        run: sudo apt-get install libx11-dev libgl1-mesa-dev
         if: ${{startsWith(matrix.environment, 'ubuntu')}}
 
       - name: Run vcpkg
@@ -49,14 +50,16 @@ jobs:
           # compute its hash and append this to the computed cache's key.
           appendedCacheKey: ${{hashFiles(env.vcpkgResponseFile)}}
 
-      - name: GL version
-        run: xinit glxinfo
-        if: ${{startsWith(matrix.environment, 'ubuntu')}}
-
       - name: CMake
         uses: lukka/run-cmake@v2
         with:
           cmakeListsOrSettingsJson: CMakeListsTxtAdvanced
           useVcpkgToolchainFile: true
-          buildDirectory: ${{runner.workspace}}/cmake-build
+          buildDirectory: ${{env.buildDirectory}}
           cmakeAppendedArgs: '-GNinja -DCMAKE_BUILD_TYPE=${{matrix.buildType}} '
+
+      - name: Dump outputs
+        run: dir ${{env.buildDirectory}}
+
+      - name: Run easy tests
+        run: ${{env.buildDirectory}}/easy_tests
