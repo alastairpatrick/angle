@@ -59,7 +59,7 @@ jobs:
         with:
           cmakeListsOrSettingsJson: CMakeListsTxtAdvanced
           useVcpkgToolchainFile: true
-          buildDirectory: ${{runner.workspace}}/out/build/
+          buildDirectory: ${{runner.workspace}}/out/build
           cmakeAppendedArgs: '-GNinja -DCMAKE_BUILD_TYPE=${{matrix.buildType}} '
 
       - name: List build directory
