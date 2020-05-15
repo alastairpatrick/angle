@@ -10,12 +10,11 @@ jobs:
 
     env:
       vcpkgResponseFile: ${{github.workspace}}/vcpkg-dependencies
-      buildDirectory: ${{runner.workspace}}/out/build
 
     strategy:
       fail-fast: false
       matrix:
-        os: [linux, osx]
+        os: [windows, linux, osx]
         arch: [x64]
         buildType: [RelWithDebInfo]
 
@@ -55,11 +54,11 @@ jobs:
         with:
           cmakeListsOrSettingsJson: CMakeListsTxtAdvanced
           useVcpkgToolchainFile: true
-          buildDirectory: ${{env.buildDirectory}}
+          buildDirectory: ${{runner.workspace}}/out/build
           cmakeAppendedArgs: '-GNinja -DCMAKE_BUILD_TYPE=${{matrix.buildType}} '
 
       - name: Dump outputs
-        run: dir ${{env.buildDirectory}}
+        run: dir ${{runner.workspace}}/out/build/
 
       - name: Run easy tests
-        run: ${{env.buildDirectory}}/easy_tests
+        run: ${{runner.workspace}}/out/build/easy_tests
