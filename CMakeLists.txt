@@ -14,19 +14,6 @@ if(WINDOWS_DESKTOP AND NOT CMAKE_SYSTEM_PROCESSOR MATCHES arm)
   option(USE_GL "build with native opengl/es support via wgl" ON)
 endif()
 
-if (APPLE)
-    set(LINKER_FLAGS "-framework Cocoa -framework OpenGL -framework IOKit -framework CoreFoundation -framework IOSurface -framework QuartzCore -framework CoreGraphics")
-elseif(LINUX)
-    set(LINKER_FLAGS "-ldl -lX11")
-else()
-    set(LINKER_FLAGS "")
-endif()
-
-set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} ${LINKER_FLAGS}")
-set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${LINKER_FLAGS}")
-set(CMAKE_MODULE_LINKER_FLAGS "${CMAKE_MODULE_LINKER_FLAGS}")
-set(CMAKE_STATIC_LIBRARY_PREFIX "")
-
 add_definitions(
     -D_CRT_SECURE_NO_DEPRECATE
     -D_SCL_SECURE_NO_WARNINGS
@@ -378,11 +365,20 @@ target_compile_definitions(libEGL
 )
 
 
+if (APPLE)
+    set(EXTRA_LIBS Cocoa OpenGL IOKit CoreFoundation IOSurface QuartzCore CoreGraphics)
+elseif(LINUX)
+    set(EXTRA_LIBS dl X11)
+else()
+    set(LINKER_FLAGS "")
+endif()
+
+
 ##########
 # easy tests
 set(EASY_TESTS_SOURCES
     "src/tests/easy/native_smoke_test.cpp"
 )
 add_executable(easy_tests ${EASY_TESTS_SOURCES})
-target_link_libraries(easy_tests PRIVATE GTest::GTest GTest::Main libEGL libGLESv2)
+target_link_libraries(easy_tests PRIVATE GTest::GTest GTest::Main libEGL libGLESv2 ${EXTRA_LIBS})
 add_test(AllTestsInMain easy_tests)
