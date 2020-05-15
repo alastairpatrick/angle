@@ -15,6 +15,8 @@ if(WINDOWS_DESKTOP AND NOT CMAKE_SYSTEM_PROCESSOR MATCHES arm)
   option(USE_D3D9 "build with d3d9 support" ON)
   option(USE_GL "build with native opengl/es support via wgl" ON)
 endif()
+    
+set(CMAKE_STATIC_LIBRARY_PREFIX "")
 
 add_definitions(
     -D_CRT_SECURE_NO_DEPRECATE
@@ -165,6 +167,9 @@ if(USE_GL AND WINDOWS_DESKTOP OR LINUX OR APPLE)
         )
     elseif(LINUX)
         set(ANGLE_RENDERER_OPENGL_PLATFORM 
+            "src/libANGLE/renderer/gl/egl/*.cpp"
+            "src/libANGLE/renderer/gl/egl/*.inl"
+            "src/libANGLE/renderer/gl/egl/*.h"
             "src/libANGLE/renderer/gl/glx/*.cpp"
             "src/libANGLE/renderer/gl/glx/*.inl"
             "src/libANGLE/renderer/gl/glx/*.h"

@@ -14,9 +14,10 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [windows, linux, osx]
+        os: [linux]
         arch: [x64]
         buildType: [RelWithDebInfo]
+        guiWrapper: ['']
 
         include:
           - os: windows
@@ -28,6 +29,7 @@ jobs:
             arch: x64
             environment: ubuntu-18.04
             buildType: RelWithDebInfo
+            guiWrapper: 'xvfb-run --auto-servernum --server-args="-screen 0 1280x1024x32"'
 
           - os: osx
             arch: x64
@@ -41,7 +43,7 @@ jobs:
             submodules: true
 
       - name: Install Ubuntu packages
-        run: sudo apt-get install libx11-dev libgl1-mesa-dev
+        run: sudo apt-get install libx11-dev libgl1-mesa-dev xvfb
         if: ${{startsWith(matrix.environment, 'ubuntu')}}
 
       - name: Run vcpkg
@@ -66,4 +68,4 @@ jobs:
         run: ls ${{runner.workspace}}/out/build/
 
       - name: Run easy tests
-        run: ${{runner.workspace}}/out/build/easy_tests
+        run: ${{matrix.guiWrapper} ${{runner.workspace}}/out/build/easy_tests
