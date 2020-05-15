@@ -5,6 +5,8 @@ include(config.cmake)
 find_package(GTest MODULE REQUIRED)
 enable_testing()
 
+find_package(X11 QUIET)
+
 option(USE_FRAME_CAPTURE "build with frame capture support" OFF)
 option(USE_LOADER "build with EGL/GLESv2 loader" ON)
 option(USE_VULKAN "build with vulkan support" OFF)
@@ -372,7 +374,7 @@ if (APPLE)
 endif()
 
 if (LINUX)
-    set(EXTRA_LIBS dl X11)
+    set(EXTRA_LIBS ${CMAKE_DL_LIBS} ${X11_LIBRARIES})
 else()
     set(EXTRA_LIBS)
 endif()

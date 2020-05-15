@@ -59,11 +59,11 @@ jobs:
         with:
           cmakeListsOrSettingsJson: CMakeListsTxtAdvanced
           useVcpkgToolchainFile: true
-          buildDirectory: ${{runner.workspace}}/out/build
+          buildDirectory: ${{runner.workspace}}/out/build/
           cmakeAppendedArgs: '-GNinja -DCMAKE_BUILD_TYPE=${{matrix.buildType}} '
 
-      - name: Dump outputs
-        run: dir ${{runner.workspace}}/out/build/
+      - name: List build directory
+        run: ls ${{runner.workspace}}/out/build/
 
       - name: Run easy tests
         run: ${{runner.workspace}}/out/build/easy_tests
