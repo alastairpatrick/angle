@@ -52,7 +52,7 @@ jobs:
       uses: lukka/run-vcpkg@v2
       with:
         vcpkgTriplet: ${{matrix.arch}}-${{matrix.os}}
-        vcpkgArguments: @${{env.vcpkgResponseFile}}
+        vcpkgArguments: '@${{env.vcpkgResponseFile}}'
         vcpkgDirectory: ${{github.workspace}}/vcpkg
         # Since the cache must be invalidated when content of the response file changes, let's
         # compute its hash and append this to the computed cache's key.
