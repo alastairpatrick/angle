@@ -68,4 +68,4 @@ jobs:
         run: ls ${{runner.workspace}}/out/build/
 
       - name: Run easy tests
-        run: ${{matrix.guiWrapper} ${{runner.workspace}}/out/build/easy_tests
+        run: ${{matrix.guiWrapper}} ${{runner.workspace}}/out/build/easy_tests
