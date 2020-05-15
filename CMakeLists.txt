@@ -366,15 +366,15 @@ target_compile_definitions(libEGL
 
 
 if (APPLE)
-    set(EXTRA_LINK_OPTIONS "-framework Cocoa -framework OpenGL -framework IOKit -framework CoreFoundation -framework IOSurface -framework QuartzCore -framework CoreGraphics")
+    set(EXTRA_LINK_OPTIONS -framework Cocoa -framework OpenGL -framework IOKit -framework CoreFoundation -framework IOSurface -framework QuartzCore -framework CoreGraphics)
 else()
-    set(EXTRA_LINK_OPTIONS "")
+    set(EXTRA_LINK_OPTIONS )
 endif()
 
 if (LINUX)
     set(EXTRA_LIBS dl X11)
 else()
-    set(LINKER_FLAGS "")
+    set(EXTRA_LIBS)
 endif()
 
 ##########
