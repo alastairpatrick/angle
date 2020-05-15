@@ -63,6 +63,7 @@ file(GLOB ANGLE_COMMON_SOURCES
 list(FILTER ANGLE_COMMON_SOURCES EXCLUDE REGEX "_unittest|event_tracer|${ANGLE_COMMON_PLATFORM_FILTER}")
 add_library(angle_common STATIC ${ANGLE_COMMON_SOURCES})
 target_include_directories(angle_common PUBLIC src/common/third_party/base)
+target_link_libraries(angle_common ${CMAKE_DL_LIBS})
 add_library(angle::common ALIAS angle_common)
 
 # These settings are applied to all ANGLE modules on account of PUBLIC.
@@ -316,6 +317,7 @@ target_link_libraries(libANGLE PRIVATE
     angle::translator
     angle::preprocessor
     ${LIBANGLE_RENDERER_PLATFORM}
+    ${X11_LIBRARIES}
 )
 target_include_directories(libANGLE PRIVATE "src/third_party/khronos")
 target_compile_definitions(libANGLE
@@ -371,12 +373,6 @@ if (APPLE)
     set(OSX_FRAMEWORKS "-framework Cocoa -framework OpenGL -framework IOKit -framework CoreFoundation -framework IOSurface -framework QuartzCore -framework CoreGraphics")
     set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} ${OSX_FRAMEWORKS}")
     set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${OSX_FRAMEWORKS}")
-endif()
-
-if (LINUX)
-    set(EXTRA_LIBS ${CMAKE_DL_LIBS} ${X11_LIBRARIES})
-else()
-    set(EXTRA_LIBS)
 endif()
 
 ##########
