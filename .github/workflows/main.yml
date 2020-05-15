@@ -45,7 +45,7 @@ jobs:
             submodules: true
 
       - name: Install Ubuntu packages
-        run: sudo apt-get install mesa-common-dev
+        run: sudo apt-get install libgl1-mesa-dev libx11-dev
         if: ${{startsWith(matrix.environment, 'ubuntu')}}
 
       - name: Run vcpkg
@@ -57,6 +57,10 @@ jobs:
           # Since the cache must be invalidated when content of the response file changes, let's
           # compute its hash and append this to the computed cache's key.
           appendedCacheKey: ${{hashFiles(env.vcpkgResponseFile)}}
+
+      - name: Check GL version
+        run: glxinfo
+        if: ${{startsWith(matrix.environment, 'ubuntu')}}
 
       - name: CMake
         uses: lukka/run-cmake@v2
