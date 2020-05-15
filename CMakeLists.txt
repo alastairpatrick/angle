@@ -64,25 +64,31 @@ file(GLOB ANGLE_COMMON_SOURCES
 list(FILTER ANGLE_COMMON_SOURCES EXCLUDE REGEX "_unittest|event_tracer|${ANGLE_COMMON_PLATFORM_FILTER}")
 add_library(angle_common STATIC ${ANGLE_COMMON_SOURCES})
 target_include_directories(angle_common PUBLIC src/common/third_party/base)
-target_compile_options(angle_common PRIVATE ${ANGLE_IGNORE_WARNINGS})
 add_library(angle::common ALIAS angle_common)
+
+# These settings are applied to all ANGLE modules on account of PUBLIC.
+target_compile_options(angle_common PUBLIC ${ANGLE_IGNORE_WARNINGS})
 if(CMAKE_SIZEOF_VOID_P EQUAL 8)
-  target_compile_definitions(angle_common INTERFACE -DANGLE_IS_64_BIT_CPU)
+  target_compile_definitions(angle_common PUBLIC -DANGLE_IS_64_BIT_CPU)
 else()
-  target_compile_definitions(angle_common INTERFACE -DANGLE_IS_32_BIT_CPU)
+  target_compile_definitions(angle_common PUBLIC -DANGLE_IS_32_BIT_CPU)
   if(MSVC AND CMAKE_SYSTEM_PROCESSOR MATCHES 86)
-    target_compile_options(angle_common INTERFACE -arch:SSE2) # clang-cl, loadimage.cpp
+    target_compile_options(angle_common PUBLIC -arch:SSE2) # clang-cl, loadimage.cpp
   endif()
 endif()
 
 
 ##########
 # angle::image_util
-file(GLOB ANGLE_IMAGE_UTIL_SOURCES "src/image_util/*.h" "src/image_util/*.inl" "src/image_util/*.cpp")
+file(GLOB ANGLE_IMAGE_UTIL_SOURCES
+    "src/image_util/*.h"
+    "src/image_util/*.inl"
+    "src/image_util/*.cpp"
+)
 add_library(angle_image_util STATIC ${ANGLE_IMAGE_UTIL_SOURCES})
 target_link_libraries(angle_image_util PRIVATE angle::common)
-target_compile_options(angle_image_util PRIVATE ${ANGLE_IGNORE_WARNINGS})
 add_library(angle::image_util ALIAS angle_image_util)
+
 
 ##########
 # angle::gpu_info_util
@@ -98,12 +104,8 @@ else()
 endif()
 add_library(angle_gpu_info_util STATIC ${ANGLE_GPU_INFO_UTIL_SOURCES})
 target_link_libraries(angle_gpu_info_util PRIVATE angle::common)
-target_compile_options(angle_gpu_info_util PRIVATE ${ANGLE_IGNORE_WARNINGS})
 add_library(angle::gpu_info_util ALIAS angle_gpu_info_util)
-if(WIN32)
-  # ensure that dxgi.h is included in common/platform.h to prevent compilation error in gpu_info_util/SystemInfo_win.cpp
-  set_property(SOURCE src/gpu_info_util/SystemInfo_win.cpp APPEND PROPERTY COMPILE_FLAGS "-DANGLE_ENABLE_D3D11") # COMPILE_OPTIONS/INCLUDE_DIRECTORIES does not work
-endif()
+
 
 ##########
 # angle::translator
@@ -129,8 +131,8 @@ if(WIN32)
     target_compile_definitions(angle_translator PRIVATE -DANGLE_ENABLE_HLSL)
 endif()
 target_link_libraries(angle_translator PRIVATE angle::common)
-target_compile_options(angle_translator PRIVATE ${ANGLE_IGNORE_WARNINGS})
 add_library(angle::translator ALIAS angle_translator)
+
 
 ##########
 # angle::preprocessor
@@ -140,8 +142,8 @@ file(GLOB PREPROCESSOR_SOURCES
 )
 add_library(angle_preprocessor STATIC ${PREPROCESSOR_SOURCES})
 target_link_libraries(angle_preprocessor PRIVATE angle::common)
-target_compile_options(angle_preprocessor PRIVATE ${ANGLE_IGNORE_WARNINGS})
 add_library(angle::preprocessor ALIAS angle_preprocessor)
+
 
 ##########
 # libANGLE
@@ -180,7 +182,6 @@ if(USE_GL AND WINDOWS_DESKTOP OR LINUX OR APPLE)
     add_library(angle_renderer_opengl INTERFACE)
     target_sources(angle_renderer_opengl INTERFACE ${LIBANGLE_GL_SOURCES})
     target_compile_definitions(angle_renderer_opengl INTERFACE -DANGLE_ENABLE_OPENGL)
-    target_compile_options(angle_renderer_opengl INTERFACE ${ANGLE_IGNORE_WARNINGS})
     add_library(angle::renderer::opengl ALIAS angle_renderer_opengl)
 endif()
 
@@ -200,7 +201,6 @@ if(WIN32)
         list(FILTER LIBANGLE_D3D_WINRT_SOURCES INCLUDE REGEX "winrt")
         add_library(angle_renderer_winrt INTERFACE)
         target_sources(angle_renderer_winrt INTERFACE ${LIBANGLE_D3D_WINRT_SOURCES})
-        target_compile_options(angle_renderer_winrt PRIVATE ${ANGLE_IGNORE_WARNINGS})
         add_library(angle::renderer::winrt ALIAS angle_renderer_winrt)
     endif()
 
@@ -219,7 +219,6 @@ if(WIN32)
             target_link_libraries(angle_renderer_win32 INTERFACE d3d9)
         endif()
         target_link_libraries(angle_renderer_win32 INTERFACE user32 gdi32)
-        target_compile_options(angle_renderer_win32 INTERFACE ${ANGLE_IGNORE_WARNINGS})
         add_library(angle::renderer::win32 ALIAS angle_renderer_win32)
         if(CMAKE_HOST_WIN32)
             set_property(SOURCE src/libANGLE/renderer/d3d/HLSLCompiler.cpp APPEND PROPERTY COMPILE_FLAGS "-DANGLE_PRELOADED_D3DCOMPILER_MODULE_NAMES={\\\"d3dcompiler_47.dll\\\",\\\"d3dcompiler_46.dll\\\",\\\"d3dcompiler_43.dll\\\"}")
@@ -238,7 +237,6 @@ if(WIN32)
         -DANGLE_ENABLE_D3D11
     )
     target_link_libraries(angle_renderer_d3d INTERFACE d3d11 dxgi dxguid) #${D3D11_LIB} ${DXGUID_LIB})
-    target_compile_options(angle_renderer_d3d INTERFACE ${ANGLE_IGNORE_WARNINGS})
     add_library(angle::renderer::d3d ALIAS angle_renderer_d3d)
 endif()
 
@@ -328,8 +326,8 @@ target_compile_definitions(libANGLE
         ${LIBANGLE_RENDERER_COMPILEDEF}
         -DANGLE_CAPTURE_ENABLED=$<BOOL:${USE_FRAME_CAPTURE}>
 )
-target_compile_options(libANGLE PRIVATE ${ANGLE_IGNORE_WARNINGS})
 add_library(angle::libANGLE ALIAS libANGLE)
+
 
 ##########
 # libGLESv2
@@ -348,7 +346,7 @@ target_compile_definitions(libGLESv2
         #        -DGL_API=
 )
 target_include_directories(libGLESv2 PUBLIC "$<INSTALL_INTERFACE:include>")
-target_compile_options(libGLESv2 PRIVATE ${ANGLE_IGNORE_WARNINGS})
+
 
 ##########
 # libEGL
@@ -363,7 +361,6 @@ target_include_directories(libEGL PUBLIC "$<INSTALL_INTERFACE:include>")
 target_include_directories(libEGL PUBLIC "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>")
 target_compile_definitions(libEGL PRIVATE -DLIBEGL_IMPLEMENTATION -DEGL_EGL_PROTOTYPES=1 -DEGL_EGLEXT_PROTOTYPES) # EGL_EGL_PROTOTYPES: function declarations with default visibility via EGLAPI
 target_compile_definitions(libEGL PRIVATE -DANGLE_USE_EGL_LOADER -DANGLE_GLESV2_LIBRARY_NAME=\"libGLESv2\" -DANGLE_EGL_LIBRARY_NAME=\"libEGL\") # TODO: option?
-target_compile_options(libEGL PRIVATE ${ANGLE_IGNORE_WARNINGS})
 
 if(NOT MSVC)
     target_compile_definitions(libGLESv2 PRIVATE -DGL_APICALL=__attribute__\(\(visibility\(\"default\"\)\)\))

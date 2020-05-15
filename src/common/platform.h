@@ -47,6 +47,7 @@
 
 #    include <intrin.h>
 #    include <windows.h>
+#    include <dxgi.h>
 
 #    if defined(WINAPI_FAMILY) && (WINAPI_FAMILY != WINAPI_FAMILY_DESKTOP_APP)
 #        define ANGLE_ENABLE_WINDOWS_UWP 1
@@ -65,7 +66,6 @@
 #        include <d3d11on12.h>
 #        include <d3d12.h>
 #        include <d3dcompiler.h>
-#        include <dxgi.h>
 #        include <dxgi1_2.h>
 #        include <dxgi1_4.h>
 #    endif
