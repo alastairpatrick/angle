@@ -366,13 +366,16 @@ target_compile_definitions(libEGL
 
 
 if (APPLE)
-    set(EXTRA_LIBS Cocoa OpenGL IOKit CoreFoundation IOSurface QuartzCore CoreGraphics)
-elseif(LINUX)
+    set(EXTRA_LINK_OPTIONS "-framework Cocoa -framework OpenGL -framework IOKit -framework CoreFoundation -framework IOSurface -framework QuartzCore -framework CoreGraphics")
+else()
+    set(EXTRA_LINK_OPTIONS "")
+endif()
+
+if (LINUX)
     set(EXTRA_LIBS dl X11)
 else()
     set(LINKER_FLAGS "")
 endif()
-
 
 ##########
 # easy tests
@@ -381,4 +384,5 @@ set(EASY_TESTS_SOURCES
 )
 add_executable(easy_tests ${EASY_TESTS_SOURCES})
 target_link_libraries(easy_tests PRIVATE GTest::GTest GTest::Main libEGL libGLESv2 ${EXTRA_LIBS})
+target_link_options(easy_tests PRIVATE ${EXTRA_LINK_OPTIONS})
 add_test(AllTestsInMain easy_tests)
