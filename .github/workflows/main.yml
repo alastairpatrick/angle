@@ -5,7 +5,7 @@ on:
 
 jobs:
   build-angle:
-    name: ${{matrix.arch}}-${{matrix.os}}-${{matrix.config}}
+    name: ${{matrix.arch}}-${{matrix.os}}-${{matrix.buildType}}
     runs-on: ${{matrix.environment}}
 
     env:
@@ -15,28 +15,28 @@ jobs:
       matrix:
         os: [windows, linux, osx]
         arch: [x64]
-        config: [Release]
+        buildType: [RelWithDebInfo]
 
         include:
           - os: windows
             arch: x64
             environment: windows-2019
-            config: Release
+            buildType: RelWithDebInfo
 
           - os: windows
             arch: x64
             environment: windows-2019
-            config: Debug
+            buildType: Debug
 
           - os: linux
             arch: x64
             environment: ubuntu-18.04
-            config: Release
+            buildType: RelWithDebInfo
 
           - os: osx
             arch: x64
             environment: macos-latest
-            config: Release
+            buildType: RelWithDebInfo
 
     steps:
     - name: Checkout source code
@@ -52,8 +52,8 @@ jobs:
       uses: lukka/run-vcpkg@v2
       with:
         vcpkgTriplet: ${{matrix.arch}}-${{matrix.os}}
-        vcpkgArguments: '@${{env.vcpkgResponseFile}}'
-        vcpkgDirectory: '${{github.workspace}}/vcpkg'
+        vcpkgArguments: @${{env.vcpkgResponseFile}}
+        vcpkgDirectory: ${{github.workspace}}/vcpkg
         # Since the cache must be invalidated when content of the response file changes, let's
         # compute its hash and append this to the computed cache's key.
         appendedCacheKey: ${{hashFiles(env.vcpkgResponseFile)}}
@@ -63,5 +63,5 @@ jobs:
       with:
         cmakeListsOrSettingsJson: CMakeListsTxtAdvanced
         useVcpkgToolchainFile: true
-        buildDirectory: '${{runner.workspace}}/cmake-build'
-        cmakeAppendedArgs: '-GNinja '
+        buildDirectory: ${{runner.workspace}}/cmake-build
+        cmakeAppendedArgs: '-GNinja -DCMAKE_BUILD_TYPE=${{matrix.buildType}} '
