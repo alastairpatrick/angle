@@ -17,7 +17,6 @@ jobs:
         os: [linux]
         arch: [x64]
         buildType: [RelWithDebInfo]
-        guiWrapper: ['']
 
         include:
           - os: windows
@@ -68,4 +67,4 @@ jobs:
         run: ls ${{runner.workspace}}/out/build/
 
       - name: Run easy tests
-        run: ${{matrix.guiWrapper}} ${{runner.workspace}}/out/build/easy_tests
+        run: ${{matrix.guiWrapper || ''}} ${{runner.workspace}}/out/build/easy_tests
