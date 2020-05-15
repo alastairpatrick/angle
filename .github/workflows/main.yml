@@ -19,6 +19,11 @@ jobs:
         buildType: [RelWithDebInfo]
 
         include:
+          - os: windows
+            arch: x64
+            environment: windows-2019
+            buildType: RelWithDebInfo
+            
           - os: linux
             arch: x64
             environment: ubuntu-18.04
