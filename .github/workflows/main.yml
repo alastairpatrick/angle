@@ -12,7 +12,6 @@ jobs:
       vcpkgResponseFile: ${{github.workspace}}/vcpkg-dependencies
 
     strategy:
-      fail-fast: false
       matrix:
         os: [windows, linux, osx]
         arch: [x64]
@@ -23,12 +22,17 @@ jobs:
             arch: x64
             environment: windows-2019
             buildType: RelWithDebInfo
+
+          - os: windows
+            arch: x64
+            environment: windows-2019
+            buildType: Debug
             
           - os: linux
             arch: x64
             environment: ubuntu-18.04
             buildType: RelWithDebInfo
-            guiWrapper: xvfb-run
+            displayWrapper: xvfb-run
 
           - os: osx
             arch: x64
@@ -66,9 +70,5 @@ jobs:
       - name: List build directory
         run: ls ${{runner.workspace}}/out/build/
 
-      - name: Check xvfb DISPLAY
-        run: ${{matrix.guiWrapper || ''}} echo $DISPLAY
-        if: ${{startsWith(matrix.environment, 'ubuntu')}}
-
       - name: Run easy tests
-        run: ${{matrix.guiWrapper || ''}} ${{runner.workspace}}/out/build/easy_tests
+        run: ${{matrix.displayWrapper || ''}} ${{runner.workspace}}/out/build/easy_tests
