@@ -61,6 +61,7 @@ jobs:
     - name: CMake
       uses: lukka/run-cmake@v2
       with:
-        cmakeListsOrSettingsJson: CMakeSettingsJson
+        cmakeListsOrSettingsJson: CMakeListsTxtAdvanced
         useVcpkgToolchainFile: true
-        configurationRegexFilter: ${{matrix.arch}}-${{matrix.config}}
+        buildDirectory: '${{runner.workspace}}/cmake-build'
+        cmakeAppendedArgs: '-GNinja '
