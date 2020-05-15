@@ -366,9 +366,9 @@ target_compile_definitions(libEGL
 
 
 if (APPLE)
-    set(EXTRA_LINK_OPTIONS -framework Cocoa -framework OpenGL -framework IOKit -framework CoreFoundation -framework IOSurface -framework QuartzCore -framework CoreGraphics)
-else()
-    set(EXTRA_LINK_OPTIONS )
+    set(OSX_FRAMEWORKS "-framework Cocoa -framework OpenGL -framework IOKit -framework CoreFoundation -framework IOSurface -framework QuartzCore -framework CoreGraphics")
+    set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} ${OSX_FRAMEWORKS}")
+    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${OSX_FRAMEWORKS}")
 endif()
 
 if (LINUX)
@@ -384,5 +384,4 @@ set(EASY_TESTS_SOURCES
 )
 add_executable(easy_tests ${EASY_TESTS_SOURCES})
 target_link_libraries(easy_tests PRIVATE GTest::GTest GTest::Main libEGL libGLESv2 ${EXTRA_LIBS})
-target_link_options(easy_tests PRIVATE ${EXTRA_LINK_OPTIONS})
 add_test(AllTestsInMain easy_tests)

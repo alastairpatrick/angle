@@ -14,21 +14,11 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [windows, linux, osx]
+        os: [linux, osx]
         arch: [x64]
         buildType: [RelWithDebInfo]
 
         include:
-          - os: windows
-            arch: x64
-            environment: windows-2019
-            buildType: RelWithDebInfo
-
-          - os: windows
-            arch: x64
-            environment: windows-2019
-            buildType: Debug
-
           - os: linux
             arch: x64
             environment: ubuntu-18.04
@@ -46,7 +36,7 @@ jobs:
             submodules: true
 
       - name: Install Ubuntu packages
-        run: sudo apt-get install libgl1-mesa-dev libx11-dev mesa-utils
+        run: sudo apt-get install libx11-dev xserver-xorg xinit libgl1-mesa-dev mesa-utils
         if: ${{startsWith(matrix.environment, 'ubuntu')}}
 
       - name: Run vcpkg
