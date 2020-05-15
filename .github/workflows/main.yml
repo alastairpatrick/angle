@@ -62,5 +62,5 @@ jobs:
       uses: lukka/run-cmake@v2
       with:
         cmakeListsOrSettingsJson: CMakeSettingsJson
-        #useVcpkgToolchainFile: true
+        useVcpkgToolchainFile: true
         configurationRegexFilter: ${{matrix.arch}}-${{matrix.config}}
