@@ -23,20 +23,8 @@ else()
 endif()
 
 if(MSVC)
-    add_compile_options(-guard:cf)
-    if(NOT CMAKE_CXX_SIMULATE_ID MATCHES MSVC)
-        add_compile_options(-d2guard4 -Wv:18)
-    elseif(WINDOWS_DESKTOP)
-      add_compile_options(-D_WIN32_WINNT=0x0600) #-GL
-    endif()
-    link_libraries(-opt:ref)
     if(CMAKE_CXX_SIMULATE_ID MATCHES MSVC)
         add_compile_options(-GR-)
-        set(CMAKE_MODULE_LINKER_FLAGS "${CMAKE_MODULE_LINKER_FLAGS} -guard:cf") # optional, added by compile_option
-        set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -guard:cf") # optional, added by compile_option
-    else()
-        set(CMAKE_MODULE_LINKER_FLAGS "${CMAKE_MODULE_LINKER_FLAGS} -guard:cf -LTCG")
-        set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -guard:cf -LTCG")
     endif()
 else()
     add_compile_options(-fno-rtti -fno-exceptions -fPIC)
@@ -45,6 +33,7 @@ endif()
 if(CMAKE_CXX_COMPILER_ID MATCHES ".*Clang" AND NOT MSVC)
     add_compile_options(-flto=thin) # lld-link: error: lto.tmp: undefined symbol: ldexpf
 endif()
+
 if(APPLE)
     set(CMAKE_MODULE_LINKER_FLAGS "${CMAKE_MODULE_LINKER_FLAGS} -dead_strip")
     set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -dead_strip")

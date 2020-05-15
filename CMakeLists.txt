@@ -2,6 +2,9 @@ cmake_minimum_required(VERSION 3.8)
 project(angle CXX C)
 include(config.cmake)
 
+find_package(GTest MODULE REQUIRED)
+enable_testing()
+
 option(USE_FRAME_CAPTURE "build with frame capture support" OFF)
 option(USE_LOADER "build with EGL/GLESv2 loader" ON)
 option(USE_VULKAN "build with vulkan support" OFF)
@@ -320,81 +323,59 @@ target_link_libraries(libANGLE PRIVATE
 )
 target_include_directories(libANGLE PRIVATE "src/third_party/khronos")
 target_compile_definitions(libANGLE
-    #PRIVATE -DANGLE_ENABLE_NULL
-    PUBLIC 
-        -DLIBANGLE_IMPLEMENTATION 
-        ${LIBANGLE_RENDERER_COMPILEDEF}
-        -DANGLE_CAPTURE_ENABLED=$<BOOL:${USE_FRAME_CAPTURE}>
+    PRIVATE #-DANGLE_ENABLE_NULL
+            -DLIBANGLE_IMPLEMENTATION 
+            ${LIBANGLE_RENDERER_COMPILEDEF}
+           -DANGLE_CAPTURE_ENABLED=$<BOOL:${USE_FRAME_CAPTURE}>
+    PUBLIC -DANGLE_PLATFORM_EXPORT=
+           -DANGLE_EXPORT=
 )
+if (MSVC)
+    # To fix Error	C1128	number of sections exceeded object file format limit: compile with /bigobj	D:\src\angle\out\build\x64-Debug\angle	D:\src\angle\src\libANGLE\capture_gles_ext_autogen.cpp	1	
+    target_compile_options(libANGLE PRIVATE /bigobj)
+endif()
 add_library(angle::libANGLE ALIAS libANGLE)
 
 
 ##########
 # libGLESv2
-file(GLOB LIBGLESV2_SOURCES "src/libGLESv2/*.h" "src/libGLESv2/*.cpp" "src/libGLESv2/libGLESv2_autogen.def")
+file(GLOB LIBGLESV2_SOURCES
+    "src/libGLESv2/*.h"
+    "src/libGLESv2/*.cpp"
+    "src/libGLESv2/libGLESv2_autogen.def"
+)
 list(FILTER LIBGLESV2_SOURCES EXCLUDE REGEX "proc_table_autogen|proc_table_gles_autogen") # unused, and duplicated symbols
-add_library(libGLESv2 SHARED ${LIBGLESV2_SOURCES})
+
+add_library(libGLESv2 STATIC ${LIBGLESV2_SOURCES})
 target_link_libraries(libGLESv2 PRIVATE angle::common angle::libANGLE)
 target_compile_definitions(libGLESv2
     PRIVATE -DLIBGLESV2_IMPLEMENTATION
-    PUBLIC
-        -DGL_GLEXT_PROTOTYPES
-        -DGL_GLES_PROTOTYPES=1
-        # static only
-        #        -DGL_APICALL=
-        #        -DEGLAPI=
-        #        -DGL_API=
+    PUBLIC -DGL_GLEXT_PROTOTYPES
+           -DGL_GLES_PROTOTYPES=1
+           -DGL_APICALL=
+           -DGL_API=
 )
-target_include_directories(libGLESv2 PUBLIC "$<INSTALL_INTERFACE:include>")
 
 
 ##########
 # libEGL
 file(GLOB LIBEGL_SOURCES "src/libEGL/*.cpp" "src/libEGL/*.h" "src/libEGL/libEGL.def")
-# "src/libEGL/libEGL.def": duplicate /export because EGLAPI is defined as dllexport
-add_library(libEGL SHARED
-    ${LIBEGL_SOURCES}
-    #    "src/libEGL/libEGL.rc"
-)
+add_library(libEGL STATIC ${LIBEGL_SOURCES})
 target_link_libraries(libEGL PRIVATE angle::common angle::libANGLE libGLESv2)
-target_include_directories(libEGL PUBLIC "$<INSTALL_INTERFACE:include>")
-target_include_directories(libEGL PUBLIC "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>")
-target_compile_definitions(libEGL PRIVATE -DLIBEGL_IMPLEMENTATION -DEGL_EGL_PROTOTYPES=1 -DEGL_EGLEXT_PROTOTYPES) # EGL_EGL_PROTOTYPES: function declarations with default visibility via EGLAPI
-target_compile_definitions(libEGL PRIVATE -DANGLE_USE_EGL_LOADER -DANGLE_GLESV2_LIBRARY_NAME=\"libGLESv2\" -DANGLE_EGL_LIBRARY_NAME=\"libEGL\") # TODO: option?
+target_compile_definitions(libEGL
+    PRIVATE -DLIBEGL_IMPLEMENTATION
+    PUBLIC  -DEGL_EGL_PROTOTYPES=1
+            -DEGL_EGLEXT_PROTOTYPES
+            -DEGLAPI=
 
-if(NOT MSVC)
-    target_compile_definitions(libGLESv2 PRIVATE -DGL_APICALL=__attribute__\(\(visibility\(\"default\"\)\)\))
-    target_compile_definitions(libEGL PRIVATE -DEGLAPI=__attribute__\(\(visibility\(\"default\"\)\)\))
-else()
-    target_compile_definitions(libGLESv2 PRIVATE -DGL_API= -DGL_APICALL=)#__declspec\(dllexport\): exports_eglXXX@?
-    target_compile_definitions(libEGL PRIVATE -DEGLAPI=)#__declspec\(dllexport\): exports_eglXXX@?
-endif()
-
-SET_TARGET_PROPERTIES(libANGLE PROPERTIES PREFIX "")
-SET_TARGET_PROPERTIES(libGLESv2 PROPERTIES PREFIX "")
-SET_TARGET_PROPERTIES(libEGL PROPERTIES PREFIX "")
-
-install(TARGETS libEGL libGLESv2 EXPORT ANGLEExport
-    RUNTIME DESTINATION bin
-    LIBRARY DESTINATION lib
-    ARCHIVE DESTINATION lib
 )
 
-#install(EXPORT ANGLEExport FILE unofficial-angle-config.cmake NAMESPACE unofficial::angle:: DESTINATION share/unofficial-angle)
 
-if(NOT DISABLE_INSTALL_HEADERS)
-    install(
-        DIRECTORY include/
-        DESTINATION include
-        FILES_MATCHING PATTERN "*.h"
-        PATTERN "GLSLANG" EXCLUDE
-        PATTERN "EGL" EXCLUDE
-        PATTERN "KHR" EXCLUDE
-        PATTERN "export.h" EXCLUDE
-    )
-endif()
-
-if (MSVC)
-    # Error	C1128	number of sections exceeded object file format limit: compile with /bigobj	D:\src\angle\out\build\x64-Debug\angle	D:\src\angle\src\libANGLE\capture_gles_ext_autogen.cpp	1	
-    add_definitions(/bigobj)
-endif (MSVC)
+##########
+# easy tests
+set(EASY_TESTS_SOURCES
+    "src/tests/easy/native_smoke_test.cpp"
+)
+add_executable(easy_tests ${EASY_TESTS_SOURCES})
+target_link_libraries(easy_tests PRIVATE GTest::GTest GTest::Main libEGL libGLESv2)
+add_test(AllTestsInMain easy_tests)
