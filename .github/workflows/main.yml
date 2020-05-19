@@ -17,7 +17,7 @@ jobs:
         os: [windows, linux, osx]
         arch: [x64]
         buildType: [RelWithDebInfo]
-        javaVersion: [8]
+        javaVersion: [11]
 
         include:
           - os: windows

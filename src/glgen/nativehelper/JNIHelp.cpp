@@ -36,12 +36,12 @@ int jniHelpInitialize(JNIEnv* env) {
   }
 
   JNINativeMethod methods[] = {
-    { "registerEGL14", "()I", register_android_opengl_jni_EGL14 },
-    { "registerEGL15", "()I", register_android_opengl_jni_EGL15 },
-    { "registerGLES20", "()I", register_android_opengl_jni_GLES20 },
-    { "registerGLES30", "()I", register_android_opengl_jni_GLES30 },
-    { "registerGLES31", "()I", register_android_opengl_jni_GLES31 },
-    { "registerGLES32", "()I", register_android_opengl_jni_GLES32 },
+    { "registerEGL14", "()I", (void*) register_android_opengl_jni_EGL14 },
+    { "registerEGL15", "()I", (void*) register_android_opengl_jni_EGL15 },
+    { "registerGLES20", "()I", (void*) register_android_opengl_jni_GLES20 },
+    { "registerGLES30", "()I", (void*) register_android_opengl_jni_GLES30 },
+    { "registerGLES31", "()I", (void*) register_android_opengl_jni_GLES31 },
+    { "registerGLES32", "()I", (void*) register_android_opengl_jni_GLES32 },
   };
   return env->RegisterNatives(gJniHelpClass, methods, NELEM(methods));
 }
