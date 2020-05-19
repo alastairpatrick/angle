@@ -17,33 +17,33 @@ jobs:
         os: [windows, linux, osx]
         arch: [x64]
         buildType: [RelWithDebInfo]
-        javaVersion: [11]
+        javaVersion: [8]
 
         include:
           - os: windows
             arch: x64
             environment: windows-2019
             buildType: RelWithDebInfo
-            javaVersion: 11
+            javaVersion: 8
 
           - os: windows
             arch: x64
             environment: windows-2019
             buildType: Debug
-            javaVersion: 11
+            javaVersion: 8
             
           - os: linux
             arch: x64
             environment: ubuntu-18.04
             buildType: RelWithDebInfo
             displayWrapper: xvfb-run
-            javaVersion: 11
+            javaVersion: 8
 
           - os: osx
             arch: x64
             environment: macos-latest
             buildType: RelWithDebInfo
-            javaVersion: 11
+            javaVersion: 8
 
     steps:
       - name: Checkout source code

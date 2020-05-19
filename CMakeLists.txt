@@ -408,7 +408,7 @@ else()
     set(ANDROID_OPENGL_IGNORE_WARNINGS "")
 endif()
 
-file(GLOB ANDROID_OPENGL_NATIVE_SOURCES
+set(ANDROID_OPENGL_NATIVE_SOURCES
   "src/glgen/generated/C/android_opengl_EGL14.cpp"
   "src/glgen/generated/C/android_opengl_EGL15.cpp"
   "src/glgen/generated/C/android_opengl_GLES20.cpp"
@@ -423,7 +423,7 @@ target_include_directories(android.opengl.native PRIVATE src/glgen ${JNI_INCLUDE
 target_compile_options(android.opengl.native PUBLIC ${ANDROID_OPENGL_IGNORE_WARNINGS})
 target_link_libraries(android.opengl.native PRIVATE libEGL libGLESv2 ${JNI_LIBRARIES} ${EXTRA_LIBS})
 
-file(GLOB ANDROID_OPENGL_SOURCES
+set(ANDROID_OPENGL_SOURCES
     "src/glgen/generated/android/opengl/EGL14.java"
     "src/glgen/generated/android/opengl/EGL15.java"
     "src/glgen/generated/android/opengl/EGLConfig.java"
