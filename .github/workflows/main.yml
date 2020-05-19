@@ -24,26 +24,26 @@ jobs:
             arch: x64
             environment: windows-2019
             buildType: RelWithDebInfo
-            javaVersion: 8
+            javaVersion: 11
 
           - os: windows
             arch: x64
             environment: windows-2019
             buildType: Debug
-            javaVersion: 8
+            javaVersion: 11
             
           - os: linux
             arch: x64
             environment: ubuntu-18.04
             buildType: RelWithDebInfo
             displayWrapper: xvfb-run
-            javaVersion: 8
+            javaVersion: 11
 
           - os: osx
             arch: x64
             environment: macos-latest
             buildType: RelWithDebInfo
-            javaVersion: 8
+            javaVersion: 11
 
     steps:
       - name: Checkout source code
