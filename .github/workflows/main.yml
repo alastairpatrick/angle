@@ -51,7 +51,7 @@ jobs:
         if: ${{startsWith(matrix.environment, 'ubuntu')}}
 
       - name: Setup JDK
-        uses: setup-java@v1
+        uses: actions/setup-java@v1
         with:
           java-version: ${{matrix.javaVersion}}
           architecture: ${{matrix.arch}}
