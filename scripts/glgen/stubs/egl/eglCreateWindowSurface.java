@@ -22,7 +22,7 @@
         int[] attrib_list,
         int offset
     ){
-        Surface sur = null;
+        /*Surface sur = null;
         if (win instanceof SurfaceView) {
             SurfaceView surfaceView = (SurfaceView)win;
             sur = surfaceView.getHolder().getSurface();
@@ -46,5 +46,6 @@
                 "this will be fixed later.");
         }
 
-        return surface;
+        return surface;*/
+        return null;
     }

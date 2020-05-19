@@ -21,19 +21,12 @@
 
 #include "jni.h"
 #include <nativehelper/JNIHelp.h>
-#include <android_runtime/AndroidRuntime.h>
-#include <android_runtime/android_view_Surface.h>
-#include <android_runtime/android_graphics_SurfaceTexture.h>
-#include <utils/misc.h>
 
 #include <assert.h>
+#include <stdint.h>
+#include <stdlib.h>
 #include <EGL/egl.h>
 
-#include <gui/Surface.h>
-#include <gui/GLConsumer.h>
-#include <gui/Surface.h>
-
-#include <ui/ANativeObjectBase.h>
 
 static jclass egldisplayClass;
 static jclass eglcontextClass;
@@ -103,8 +96,9 @@ nativeClassInit(JNIEnv *_env, jclass glImplClass)
 static void *
 fromEGLHandle(JNIEnv *_env, jmethodID mid, jobject obj) {
     if (obj == NULL){
-        jniThrowException(_env, "java/lang/IllegalArgumentException",
-                          "Object is set to null.");
+        // NULL EGL objects can be valid, e.g as share group argument to eglCreateContext.
+        //jniThrowException(_env, "java/lang/IllegalArgumentException",
+        //                  "Object is set to null.");
         return nullptr;
     }
 

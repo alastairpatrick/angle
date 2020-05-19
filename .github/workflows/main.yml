@@ -16,6 +16,7 @@ jobs:
         os: [windows, linux, osx]
         arch: [x64]
         buildType: [RelWithDebInfo]
+        javaVersion: [8]
 
         include:
           - os: windows
@@ -48,6 +49,12 @@ jobs:
       - name: Install Ubuntu packages
         run: sudo apt-get install libx11-dev libgl1-mesa-dev xvfb
         if: ${{startsWith(matrix.environment, 'ubuntu')}}
+
+      - name: Setup JDK
+        uses: setup-java@v1
+        with:
+          java-version: ${{matrix.javaVersion}}
+          architecture: ${{matrix.arch}}
 
       - name: Run vcpkg
         uses: lukka/run-vcpkg@v2

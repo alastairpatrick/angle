@@ -2,11 +2,6 @@ cmake_minimum_required(VERSION 3.8)
 project(angle CXX C)
 include(config.cmake)
 
-find_package(GTest MODULE REQUIRED)
-enable_testing()
-
-find_package(X11 QUIET)
-
 option(USE_FRAME_CAPTURE "build with frame capture support" OFF)
 option(USE_LOADER "build with EGL/GLESv2 loader" ON)
 option(USE_VULKAN "build with vulkan support" OFF)
@@ -16,6 +11,15 @@ if(WINDOWS_DESKTOP AND NOT CMAKE_SYSTEM_PROCESSOR MATCHES arm)
   option(USE_GL "build with native opengl/es support via wgl" ON)
 endif()
     
+
+find_package(GTest MODULE REQUIRED)
+find_package(Java REQUIRED)
+find_package(JNI REQUIRED)
+find_package(X11 QUIET)
+
+enable_testing()
+include(UseJava)
+
 set(CMAKE_STATIC_LIBRARY_PREFIX "")
 
 add_definitions(
@@ -388,3 +392,53 @@ set(EASY_TESTS_SOURCES
 add_executable(easy_tests ${EASY_TESTS_SOURCES})
 target_link_libraries(easy_tests PRIVATE GTest::GTest GTest::Main libEGL libGLESv2 ${EXTRA_LIBS})
 add_test(AllTestsInMain easy_tests)
+
+
+
+##########
+# com.android.opengl bindings
+
+if(MSVC)
+    set(ANDROID_OPENGL_IGNORE_WARNINGS "/wd4068" "/wd4101" "/wd4312")
+else()
+    set(ANDROID_OPENGL_IGNORE_WARNINGS "")
+endif()
+
+file(GLOB ANDROID_OPENGL_NATIVE_SOURCES
+  "src/glgen/generated/C/android_opengl_EGL14.cpp"
+  "src/glgen/generated/C/android_opengl_EGL15.cpp"
+  "src/glgen/generated/C/android_opengl_GLES20.cpp"
+  "src/glgen/generated/C/android_opengl_GLES30.cpp"
+  "src/glgen/generated/C/android_opengl_GLES31.cpp"
+  "src/glgen/generated/C/android_opengl_GLES32.cpp"
+  "src/glgen/nativehelper/EntryPoints.cpp"
+  "src/glgen/nativehelper/JNIHelp.cpp"
+)
+add_library(android.opengl.native SHARED ${ANDROID_OPENGL_NATIVE_SOURCES})
+target_include_directories(android.opengl.native PRIVATE src/glgen ${JNI_INCLUDE_DIRS})
+target_compile_options(android.opengl.native PUBLIC ${ANDROID_OPENGL_IGNORE_WARNINGS})
+target_link_libraries(android.opengl.native PRIVATE libEGL libGLESv2 ${JNI_LIBRARIES} ${EXTRA_LIBS})
+
+file(GLOB ANDROID_OPENGL_SOURCES
+    "src/glgen/generated/android/opengl/EGL14.java"
+    "src/glgen/generated/android/opengl/EGL15.java"
+    "src/glgen/generated/android/opengl/EGLConfig.java"
+    "src/glgen/generated/android/opengl/EGLContext.java"
+    "src/glgen/generated/android/opengl/EGLDisplay.java"
+    "src/glgen/generated/android/opengl/EGLImage.java"
+    "src/glgen/generated/android/opengl/EGLObjectHandle.java"
+    "src/glgen/generated/android/opengl/EGLSurface.java"
+    "src/glgen/generated/android/opengl/EGLSync.java"
+    "src/glgen/generated/android/opengl/GLES20.java"
+    "src/glgen/generated/android/opengl/GLES30.java"
+    "src/glgen/generated/android/opengl/GLES31.java"
+    "src/glgen/generated/android/opengl/GLES32.java"  
+    "src/glgen/generated/android/opengl/JNIHelp.java"
+)
+add_jar(android.opengl ${ANDROID_OPENGL_SOURCES})
+
+
+add_jar(java_smoke_test
+    "src/tests/easy/JavaSmokeTest.java"
+    ENTRY_POINT TestGL
+    INCLUDE_JARS android.opengl)

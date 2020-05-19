@@ -740,13 +740,16 @@ public class JniCodeEmitter {
         cStream.println();
 
 
-        cStream.println("int " + registrationFunctionName + "(JNIEnv *_env)");
+        cStream.println("jint JNICALL " + registrationFunctionName + "(JNIEnv *_env, jclass)");
         cStream.println("{");
-        cStream.println(indent +
-                        "int err;");
 
         cStream.println(indent +
-                        "err = android::AndroidRuntime::registerNativeMethods(_env, classPathName, methods, NELEM(methods));");
+                        "jclass klass = _env->FindClass(classPathName);");
+        cStream.println(indent +
+                        "if (!klass) return -1;");
+
+        cStream.println(indent +
+                        "int err = _env->RegisterNatives(klass, methods, NELEM(methods));");
 
         cStream.println(indent + "return err;");
         cStream.println("}");

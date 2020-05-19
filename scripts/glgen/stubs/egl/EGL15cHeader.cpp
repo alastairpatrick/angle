@@ -21,14 +21,12 @@
 
 #include "jni.h"
 #include <nativehelper/JNIHelp.h>
-#include <android_runtime/AndroidRuntime.h>
-#include <utils/misc.h>
 
 #include <assert.h>
+#include <stdint.h>
+#include <stdlib.h>
 #include <vector>
 #include <EGL/egl.h>
-
-#include <ui/ANativeObjectBase.h>
 
 // classes from EGL 1.4
 static jclass egldisplayClass;
@@ -127,22 +125,7 @@ nativeClassInit(JNIEnv *_env, jclass glImplClass)
 static void *
 getPointer(JNIEnv *_env, jobject buffer, jarray *array, jint *remaining, jint *offset)
 {
-    jint position;
-    jint limit;
-    jint elementSizeShift;
-    jlong pointer;
-
-    pointer = jniGetNioBufferFields(_env, buffer, &position, &limit, &elementSizeShift);
-    *remaining = (limit - position) << elementSizeShift;
-    if (pointer != 0L) {
-        *array = nullptr;
-        pointer += position << elementSizeShift;
-        return reinterpret_cast<void*>(pointer);
-    }
-
-    *array = jniGetNioBufferBaseArray(_env, buffer);
-    *offset = jniGetNioBufferBaseArrayOffset(_env, buffer);
-    return nullptr;
+    return jniGetBufferPointer(_env, buffer, array, remaining, offset);
 }
 
 static void
@@ -155,8 +138,9 @@ releasePointer(JNIEnv *_env, jarray array, void *data, jboolean commit)
 static void *
 fromEGLHandle(JNIEnv *_env, jmethodID mid, jobject obj) {
     if (obj == NULL) {
-        jniThrowException(_env, "java/lang/IllegalArgumentException",
-                          "Object is set to null.");
+        // NULL EGL objects can be valid, e.g as share group argument to eglCreateContext.
+        //jniThrowException(_env, "java/lang/IllegalArgumentException",
+        //                 "Object is set to null.");
         return nullptr;
     }
 

@@ -58,7 +58,7 @@ TEST(NativeSmokeTest, NativeSmokeTest) {
   EXPECT_EQ(GL_NO_ERROR, glGetError());
 
   for (int i = 0; i < width * height; ++i) {
-    ASSERT_EQ(0x00FF00FF, pixels[i]);  // LHS is wrong to make test fail
+    ASSERT_EQ(0x00FF00FF, pixels[i]);
   }
 
   EXPECT_TRUE(eglDestroyContext(display, context));

@@ -235,6 +235,8 @@ public class GLES32 extends GLES31 {
 
     native private static void _nativeClassInit();
     static {
+        JNIHelp.loadNativeLibrary();
+        JNIHelp.registerGLES32();
         _nativeClassInit();
     }
 

@@ -19,6 +19,7 @@
      * @deprecated
      * Use the version that takes a ByteBuffer as the last argument, or the versions that return a String.
      * */
+    @Deprecated
     public static native void glGetTransformFeedbackVarying(
         int program,
         int index,

@@ -90,9 +90,6 @@ fi
 
 rm src/*.class
 
-# Add UnsupportedAppUsage.java to known sources.
-mkdir -p out/android/annotation
-cp ../../../../base/core/java/android/annotation/UnsupportedAppUsage.java out/android/annotation
 
 pushd out > /dev/null
 mkdir classes
@@ -114,7 +111,7 @@ javac -d classes    android/opengl/EGL14.java \
                     android/opengl/GLES31.java \
                     android/opengl/GLES31Ext.java \
                     android/opengl/GLES32.java \
-                    android/annotation/UnsupportedAppUsage.java
+
 popd > /dev/null
 JAVA_RESULT=$?
 if [ $JAVA_RESULT -ne 0 ]; then
@@ -122,15 +119,17 @@ if [ $JAVA_RESULT -ne 0 ]; then
     exit $JAVA_RESULT
 fi
 
-rm -rf generated
-mkdir -p generated/C
-cp out/com_google_android_gles_jni_GLImpl.cpp generated/C
-cp -r out/com generated
-cp -r out/javax generated
+GENERATED=../../src/glgen/generated
 
-cp out/android_opengl_*.cpp generated/C
-mkdir -p generated/android/opengl
-cp -r out/android/opengl generated/android
+rm -rf $GENERATED
+mkdir -p $GENERATED/C
+cp out/com_google_android_gles_jni_GLImpl.cpp $GENERATED/C
+cp -r out/com $GENERATED
+cp -r out/javax $GENERATED
+
+cp out/android_opengl_*.cpp $GENERATED/C
+mkdir -p $GENERATED/android/opengl
+cp -r out/android/opengl $GENERATED/android
 
 rm -rf out
 KEEP_GENERATED=0
@@ -153,25 +152,25 @@ compareGenerated() {
     fi
 }
 
-compareGenerated ../../../../base/core/jni generated/C com_google_android_gles_jni_GLImpl.cpp
-compareGenerated ../../../../base/opengl/java/com/google/android/gles_jni generated/com/google/android/gles_jni GLImpl.java
+compareGenerated ../../../../base/core/jni $GENERATED/C com_google_android_gles_jni_GLImpl.cpp
+compareGenerated ../../../../base/opengl/java/com/google/android/gles_jni $GENERATED/com/google/android/gles_jni GLImpl.java
 
 for x in GL.java GL10.java GL10Ext.java GL11.java GL11Ext.java GL11ExtensionPack.java
 do
-    compareGenerated ../../../../base/opengl/java/javax/microedition/khronos/opengles generated/javax/microedition/khronos/opengles $x
+    compareGenerated ../../../../base/opengl/java/javax/microedition/khronos/opengles $GENERATED/javax/microedition/khronos/opengles $x
 done
 
 for x in EGL14 EGL15 EGLExt GLES10 GLES10Ext GLES11 GLES11Ext GLES20 GLES30 GLES31 GLES31Ext GLES32
 do
-    compareGenerated ../../../../base/opengl/java/android/opengl generated/android/opengl ${x}.java
-    compareGenerated ../../../../base/core/jni generated/C android_opengl_${x}.cpp
+    compareGenerated ../../../../base/opengl/java/android/opengl $GENERATED/android/opengl ${x}.java
+    compareGenerated ../../../../base/core/jni $GENERATED/C android_opengl_${x}.cpp
 done
 
 for x in EGLConfig EGLContext EGLDisplay EGLObjectHandle EGLSurface EGLImage EGLSync
 do
-    compareGenerated ../../../../base/opengl/java/android/opengl generated/android/opengl ${x}.java
+    compareGenerated ../../../../base/opengl/java/android/opengl $GENERATED/android/opengl ${x}.java
 done
 
 if [ $KEEP_GENERATED == "0" ] ; then
-    rm -rf generated
+    rm -rf $GENERATED
 fi

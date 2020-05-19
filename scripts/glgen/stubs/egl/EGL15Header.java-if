@@ -74,5 +74,7 @@ public final class EGL15 {
 
     native private static void _nativeClassInit();
     static {
+        JNIHelp.loadNativeLibrary();
+        JNIHelp.registerEGL15();
         _nativeClassInit();
     }

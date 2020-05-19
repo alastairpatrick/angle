@@ -20,4 +20,6 @@
 #pragma GCC diagnostic ignored "-Wunused-function"
 
 #include <stdint.h>
+#include <stdlib.h>
+#include <stdint.h>
 #include <GLES3/gl32.h>

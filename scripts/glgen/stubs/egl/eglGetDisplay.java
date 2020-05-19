@@ -7,8 +7,9 @@
     /**
      * {@hide}
      */
-    @UnsupportedAppUsage
+    @Deprecated
     public static native EGLDisplay eglGetDisplay(
         long display_id
     );
-
+  
+  

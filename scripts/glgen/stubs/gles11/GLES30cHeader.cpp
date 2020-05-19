@@ -20,6 +20,8 @@
 #pragma GCC diagnostic ignored "-Wunused-variable"
 #pragma GCC diagnostic ignored "-Wunused-function"
 
+#include <stdint.h>
+#include <stdlib.h>
 #include <GLES3/gl3.h>
 #include <GLES3/gl3ext.h>
 

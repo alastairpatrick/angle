@@ -7,7 +7,7 @@ android_glGetDebugMessageLogKHR__II_3II_3II_3II_3II_3II_3BI
 }
 
 /* GLuint glGetDebugMessageLogKHR ( GLuint count, GLsizei bufSize, GLenum *sources, GLenum *types, GLuint *ids, GLenum *severities, GLsizei *lengths, GLchar *messageLog ) */
-static uint
+static jint
 android_glGetDebugMessageLogKHR__ILjava_nio_IntBuffer_2Ljava_nio_IntBuffer_2Ljava_nio_IntBuffer_2Ljava_nio_IntBuffer_2Ljava_nio_IntBuffer_2Ljava_nio_ByteBuffer_2
   (JNIEnv *_env, jobject _this, jint count, jobject sources_ref, jobject types_ref, jobject ids_ref, jobject severities_ref, jobject lengths_ref, jobject messageLog_ref) {
     jniThrowException(_env, "java/lang/UnsupportedOperationException", "not yet implemented");

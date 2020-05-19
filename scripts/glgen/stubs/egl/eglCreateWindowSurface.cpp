@@ -12,7 +12,7 @@ android_eglCreateWindowSurface
     EGLint *attrib_list_base = (EGLint *) 0;
     jint _remaining;
     EGLint *attrib_list = (EGLint *) 0;
-    android::sp<ANativeWindow> window;
+    //android::sp<ANativeWindow> window;
 
     if (attrib_list_ref) {
         if (offset < 0) {
@@ -40,13 +40,13 @@ android_eglCreateWindowSurface
         }
     }
 
-    if (win == NULL) {
+    //if (win == NULL) {
 not_valid_surface:
         _exception = 1;
         _exceptionType = "java/lang/IllegalArgumentException";
         _exceptionMessage = "Make sure the SurfaceView or associated SurfaceHolder has a valid Surface";
         goto exit;
-    }
+/*    }
 
     window = android::android_view_Surface_getNativeWindow(_env, win);
 
@@ -58,11 +58,11 @@ not_valid_surface:
         (EGLConfig)config_native,
         (EGLNativeWindowType)window.get(),
         (EGLint *)attrib_list
-    );
+    );*/
 
 exit:
     if (attrib_list_base) {
-        _env->ReleaseIntArrayElements(attrib_list_ref, attrib_list_base,
+        _env->ReleaseIntArrayElements(attrib_list_ref, (jint*) attrib_list_base,
             JNI_ABORT);
     }
     if (_exception) {
@@ -86,8 +86,8 @@ android_eglCreateWindowSurfaceTexture
     EGLint *attrib_list_base = (EGLint *) 0;
     jint _remaining;
     EGLint *attrib_list = (EGLint *) 0;
-    android::sp<ANativeWindow> window;
-    android::sp<android::IGraphicBufferProducer> producer;
+    //android::sp<ANativeWindow> window;
+    //android::sp<android::IGraphicBufferProducer> producer;
 
     if (!attrib_list_ref) {
         _exception = 1;
@@ -101,13 +101,13 @@ android_eglCreateWindowSurfaceTexture
         _exceptionMessage = "offset < 0";
         goto exit;
     }
-    if (win == NULL) {
+    //if (win == NULL) {
 not_valid_surface:
         _exception = 1;
         _exceptionType = "java/lang/IllegalArgumentException";
         _exceptionMessage = "Make sure the SurfaceView or associated SurfaceHolder has a valid Surface";
         goto exit;
-    }
+/*    }
     producer = android::SurfaceTexture_getProducer(_env, win);
 
     if (producer == NULL)
@@ -141,11 +141,11 @@ not_valid_surface:
         (EGLConfig)config_native,
         (EGLNativeWindowType)window.get(),
         (EGLint *)attrib_list
-    );
+    );*/
 
 exit:
     if (attrib_list_base) {
-        _env->ReleaseIntArrayElements(attrib_list_ref, attrib_list_base,
+        _env->ReleaseIntArrayElements(attrib_list_ref, (jint*) attrib_list_base,
             JNI_ABORT);
     }
     if (_exception) {

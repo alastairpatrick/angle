@@ -1,7 +1,6 @@
 #include <jni.h>
 #include <nativehelper/JNIHelp.h>
-#include <android_runtime/AndroidRuntime.h>
-#include <utils/misc.h>
+
 #include <assert.h>
 
 
@@ -46,22 +45,7 @@ nativeClassInit(JNIEnv *_env, jclass glImplClass)
 static void *
 getPointer(JNIEnv *_env, jobject buffer, jarray *array, jint *remaining, jint *offset)
 {
-    jint position;
-    jint limit;
-    jint elementSizeShift;
-    jlong pointer;
-
-    pointer = jniGetNioBufferFields(_env, buffer, &position, &limit, &elementSizeShift);
-    *remaining = (limit - position) << elementSizeShift;
-    if (pointer != 0L) {
-        *array = nullptr;
-        pointer += position << elementSizeShift;
-        return reinterpret_cast<void*>(pointer);
-    }
-
-    *array = jniGetNioBufferBaseArray(_env, buffer);
-    *offset = jniGetNioBufferBaseArrayOffset(_env, buffer);
-    return nullptr;
+    return jniGetBufferPointer(_env, buffer, array, remaining, offset);
 }
 
 class ByteArrayGetter {
@@ -183,18 +167,7 @@ releasePointer(JNIEnv *_env, jarray array, void *data, jboolean commit)
 
 static void *
 getDirectBufferPointer(JNIEnv *_env, jobject buffer) {
-    jint position;
-    jint limit;
-    jint elementSizeShift;
-    jlong pointer;
-    pointer = jniGetNioBufferFields(_env, buffer, &position, &limit, &elementSizeShift);
-    if (pointer == 0) {
-        jniThrowException(_env, "java/lang/IllegalArgumentException",
-                          "Must use a native order direct Buffer");
-        return nullptr;
-    }
-    pointer += position << elementSizeShift;
-    return reinterpret_cast<void*>(pointer);
+    return jniGetDirectBufferPointer(_env, buffer);
 }
 
 // --------------------------------------------------------------------------
@@ -293,7 +266,7 @@ static int getNeededCount(GLint pname) {
 }
 
 template <typename JTYPEARRAY, typename ARRAYGETTER, typename NTYPEARRAY,
-          typename ARRAYRELEASER, typename CTYPE, void GET(GLenum, CTYPE*)>
+          typename ARRAYRELEASER, typename CTYPE, void JNICALL GET(GLenum, CTYPE*)>
 static void
 get
   (JNIEnv *_env, jobject _this, jint pname, JTYPEARRAY params_ref, jint offset) {
@@ -340,7 +313,7 @@ get
 exit:
     if (params_base) {
         releaseArrayPointer<JTYPEARRAY, NTYPEARRAY, ARRAYRELEASER>(
-            _env, params_ref, params_base, !_exception);
+            _env, params_ref, (NTYPEARRAY) params_base, !_exception);
     }
     if (_exception) {
         jniThrowException(_env, _exceptionType, _exceptionMessage);
@@ -349,7 +322,7 @@ exit:
 
 
 template <typename CTYPE, typename JTYPEARRAY, typename ARRAYGETTER, typename NTYPEARRAY,
-          typename ARRAYRELEASER, void GET(GLenum, CTYPE*)>
+          typename ARRAYRELEASER, void JNICALL GET(GLenum, CTYPE*)>
 static void
 getarray
   (JNIEnv *_env, jobject _this, jint pname, jobject params_buf) {

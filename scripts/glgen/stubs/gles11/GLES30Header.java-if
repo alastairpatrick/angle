@@ -332,6 +332,8 @@ public class GLES30 extends GLES20 {
 
     native private static void _nativeClassInit();
     static {
+        JNIHelp.loadNativeLibrary();
+        JNIHelp.registerGLES30();
         _nativeClassInit();
     }
 

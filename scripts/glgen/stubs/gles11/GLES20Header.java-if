@@ -19,8 +19,6 @@
 
 package android.opengl;
 
-import android.annotation.UnsupportedAppUsage;
-
 /** OpenGL ES 2.0
  */
 public class GLES20 {
@@ -333,5 +331,7 @@ public class GLES20 {
 
     native private static void _nativeClassInit();
     static {
+        JNIHelp.loadNativeLibrary();
+        JNIHelp.registerGLES20();
         _nativeClassInit();
     }

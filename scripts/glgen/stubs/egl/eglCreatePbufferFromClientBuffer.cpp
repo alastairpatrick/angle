@@ -49,7 +49,7 @@ android_eglCreatePbufferFromClientBuffer
 
 exit:
     if (attrib_list_base) {
-        _env->ReleaseIntArrayElements(attrib_list_ref, attrib_list_base,
+        _env->ReleaseIntArrayElements(attrib_list_ref, (jint*) attrib_list_base,
             JNI_ABORT);
     }
     if (_exception) {

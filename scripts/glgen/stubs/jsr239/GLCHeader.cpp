@@ -21,10 +21,10 @@
 
 #include "jni.h"
 #include <nativehelper/JNIHelp.h>
-#include <android_runtime/AndroidRuntime.h>
-#include <utils/misc.h>
 
 #include <assert.h>
+#include <stdint.h>
+#include <stdlib.h>
 #include <GLES/gl.h>
 #include <GLES/glext.h>
 
@@ -88,22 +88,7 @@ nativeClassInit(JNIEnv *_env, jclass glImplClass)
 static void *
 getPointer(JNIEnv *_env, jobject buffer, jarray *array, jint *remaining, jint *offset)
 {
-    jint position;
-    jint limit;
-    jint elementSizeShift;
-    jlong pointer;
-
-    pointer = jniGetNioBufferFields(_env, buffer, &position, &limit, &elementSizeShift);
-    *remaining = (limit - position) << elementSizeShift;
-    if (pointer != 0L) {
-        *array = nullptr;
-        pointer += position << elementSizeShift;
-        return reinterpret_cast<void*>(pointer);
-    }
-
-    *array = jniGetNioBufferBaseArray(_env, buffer);
-    *offset = jniGetNioBufferBaseArrayOffset(_env, buffer);
-    return nullptr;
+    return jniGetBufferPointer(_env, buffer, array, remaining, offset);
 }
 
 static void
@@ -119,22 +104,7 @@ extern char*  __progname;
 
 static void *
 getDirectBufferPointer(JNIEnv *_env, jobject buffer) {
-    if (buffer == nullptr) {
-        return nullptr;
-    }
-
-    jint position;
-    jint limit;
-    jint elementSizeShift;
-    jlong pointer;
-    pointer = jniGetNioBufferFields(_env, buffer, &position, &limit, &elementSizeShift);
-    if (pointer == 0) {
-        jniThrowException(_env, "java/lang/IllegalArgumentException",
-                          "Must use a native order direct Buffer");
-        return nullptr;
-    }
-    pointer += position << elementSizeShift;
-    return reinterpret_cast<void*>(pointer);
+    return jniGetDirectBufferPointer(_env, buffer);
 }
 
 static int
