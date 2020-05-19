@@ -40,8 +40,8 @@ android_eglCreateWindowSurface
         }
     }
 
-    //if (win == NULL) {
-not_valid_surface:
+    /*if (win == NULL) {
+not_valid_surface:*/
         _exception = 1;
         _exceptionType = "java/lang/IllegalArgumentException";
         _exceptionMessage = "Make sure the SurfaceView or associated SurfaceHolder has a valid Surface";
@@ -101,8 +101,8 @@ android_eglCreateWindowSurfaceTexture
         _exceptionMessage = "offset < 0";
         goto exit;
     }
-    //if (win == NULL) {
-not_valid_surface:
+    /*if (win == NULL) {
+not_valid_surface:*/
         _exception = 1;
         _exceptionType = "java/lang/IllegalArgumentException";
         _exceptionMessage = "Make sure the SurfaceView or associated SurfaceHolder has a valid Surface";

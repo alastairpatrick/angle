@@ -160,7 +160,7 @@ public static final int EGL_CORE_NATIVE_ENGINE             = 0x305B;
     /**
      * {@hide}
      */
-    //@UnsupportedAppUsage
+    @Deprecated
     public static native EGLDisplay eglGetDisplay(
         long display_id
     );

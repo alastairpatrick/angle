@@ -19,6 +19,7 @@
 #pragma GCC diagnostic ignored "-Wunused-variable"
 #pragma GCC diagnostic ignored "-Wunused-function"
 
+#include <limits.h>
 #include <stdint.h>
 #include <stdlib.h>
 #include <stdint.h>

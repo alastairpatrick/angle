@@ -399,7 +399,7 @@ add_test(AllTestsInMain easy_tests)
 # com.android.opengl bindings
 
 if(MSVC)
-    set(ANDROID_OPENGL_IGNORE_WARNINGS "/wd4068" "/wd4101" "/wd4312")
+    set(ANDROID_OPENGL_IGNORE_WARNINGS "/wd4068" "/wd4101" "/wd4244" "/wd4312")
 elseif(APPLE)
     set(ANDROID_OPENGL_IGNORE_WARNINGS "-Wno-writable-strings")
 elseif(LINUX)

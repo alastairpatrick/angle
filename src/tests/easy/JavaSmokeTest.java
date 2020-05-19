@@ -14,8 +14,6 @@ public class JavaSmokeTest {
     int width = 16;
     int height = 16;
 
-    long pid = ProcessHandle.current().pid();
-    System.out.format("PID %d\n", pid);
     /*try {
       Thread.sleep(10000);
     } catch (InterruptedException e) {
