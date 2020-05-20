@@ -51,11 +51,11 @@ jobs:
         with:
             submodules: true
 
-      - name: Install Ubuntu packages
+      - name: Set up Ubuntu packages
         run: sudo apt-get install libx11-dev libgl1-mesa-dev xvfb
         if: ${{startsWith(matrix.environment, 'ubuntu')}}
 
-      - name: Setup JDK
+      - name: Set up JDK
         uses: actions/setup-java@v1
         with:
           java-version: ${{matrix.javaVersion}}
@@ -82,5 +82,9 @@ jobs:
       - name: List build directory
         run: ls ${{runner.workspace}}/out/build/
 
-      - name: Run easy tests
+      - name: Run native tests
         run: ${{matrix.displayWrapper || ''}} ${{runner.workspace}}/out/build/easy_tests
+
+      - name: Run Java tests
+        run: ${{matrix.displayWrapper || ''}} java -cp * JavaSmokeTest
+        working-directory: ${{runner.workspace}}/out/build
