@@ -85,6 +85,12 @@ jobs:
       - name: Run native tests
         run: ${{matrix.displayWrapper || ''}} ${{runner.workspace}}/out/build/easy_tests
 
+      # The classpath separator character is different on Windows (;) versus other platforms (:). One way to avoid
+      # using it is to pass * as the classpath, which causes java to put all .jar files in a directory in the classpath.
+      # This requires avoiding bash's globbing, which would substitute the * before java saw it.
       - name: Run Java tests
-        run: ${{matrix.displayWrapper || ''}} java -cp * JavaSmokeTest
+        run: |
+          set -o noglob
+          ${{matrix.displayWrapper || ''}} java -cp * JavaSmokeTest
+        shell: bash
         working-directory: ${{runner.workspace}}/out/build
