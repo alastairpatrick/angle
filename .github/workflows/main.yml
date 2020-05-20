@@ -45,10 +45,10 @@ jobs:
             buildType: RelWithDebInfo
             javaVersion: 8
             
-          - os: linux
+          - os: windows
             arch: x86
-            environment: ubuntu-16.04
-            buildType: RelWithDebInfo
+            environment: windows-2019
+            buildType: Debug
             javaVersion: 13
 
     steps:
