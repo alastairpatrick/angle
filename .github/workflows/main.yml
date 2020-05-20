@@ -17,7 +17,7 @@ jobs:
         os: [windows, linux, osx]
         arch: [x64]
         buildType: [RelWithDebInfo]
-        javaVersion: [8]
+        javaVersion: [8]                    # Earliest supported JDK version.
 
         include:
           - os: windows
@@ -44,6 +44,12 @@ jobs:
             environment: macos-latest
             buildType: RelWithDebInfo
             javaVersion: 8
+            
+          - os: linux
+            arch: x86
+            environment: ubuntu-16.04
+            buildType: RelWithDebInfo
+            javaVersion: 13
 
     steps:
       - name: Checkout source code
