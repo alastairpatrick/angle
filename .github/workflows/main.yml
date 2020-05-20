@@ -88,9 +88,12 @@ jobs:
       # The classpath separator character is different on Windows (;) versus other platforms (:). One way to avoid
       # using it is to pass * as the classpath, which causes java to put all .jar files in a directory in the classpath.
       # This requires avoiding bash's globbing, which would substitute the * before java saw it.
+      #
+      # Java puts the current working directory on java.library.path by default on Windows and Linux but not OSX so
+      # set it explicitly.
       - name: Run Java tests
         run: |
           set -o noglob
-          ${{matrix.displayWrapper || ''}} java -cp * JavaSmokeTest
+          ${{matrix.displayWrapper || ''}} java -cp * -Djava.library.path=. JavaSmokeTest
         shell: bash
         working-directory: ${{runner.workspace}}/out/build
