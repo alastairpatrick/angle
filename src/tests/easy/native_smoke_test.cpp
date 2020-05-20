@@ -53,7 +53,7 @@ TEST(NativeSmokeTest, NativeSmokeTest) {
   glClear(GL_COLOR_BUFFER_BIT);
 
   std::vector<uint32_t> pixels(width * height);
-  glReadPixels(0, 0, 16, 16, GL_RGBA, GL_UNSIGNED_BYTE, &pixels[0]);
+  glReadPixels(0, 0, width, height, GL_RGBA, GL_UNSIGNED_BYTE, &pixels[0]);
   
   EXPECT_EQ(GL_NO_ERROR, glGetError());
 

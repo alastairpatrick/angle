@@ -1,4 +1,5 @@
 import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
 import java.nio.IntBuffer;
 
 import android.opengl.EGL14;
@@ -81,10 +82,17 @@ public class JavaSmokeTest {
     GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT);
 
     ByteBuffer pixels = ByteBuffer.allocateDirect(width * height * 4);
+    pixels.order(ByteOrder.nativeOrder());
     GLES20.glReadPixels(0, 0, width, height, GLES20.GL_RGBA, GLES20.GL_UNSIGNED_BYTE, pixels);
 
     IntBuffer pixels32 = pixels.asIntBuffer();
-    System.out.format("Pixel at 0, 0 = %x\n", pixels32.get(0));
+    for (int i = 0; i < width * height; ++i) {
+      int color = pixels32.get(i);
+      if (color != 0x00FF00FF) {
+        System.out.format("Pixel at %d was not expected color %x\n", i, color);
+        System.exit(1);
+      }
+    }
 
     EGL14.eglDestroyContext(display, context);
     EGL14.eglDestroySurface(display, surface);
