@@ -1,6 +1,11 @@
 #include <jni.h>
 #include <stdlib.h>
 
+#if !defined(NO_JAWT)
+#include <jawt.h>
+#include <jawt_md.h>
+#endif
+
 #include "nativehelper/JNIHelp.h"
 
 jint JNICALL register_android_opengl_jni_EGL14(JNIEnv *_env, jclass);
@@ -114,3 +119,63 @@ void *jniGetDirectBufferPointer(JNIEnv *env, jobject buffer) {
 }
 
 
+void* jniGetWindowHandle(JNIEnv* env, jobject windowObject) {
+#if defined(NO_JAWT)
+  return nullptr;
+#else
+  JAWT awt = {};
+  awt.version = JAWT_VERSION_1_4;
+
+  if (!JAWT_GetAWT(env, &awt)) {
+    jniThrowException(env, "java/lang/UnsatisfiedLinkError", "Can't load JAWT");
+    return nullptr;
+  }
+
+  void* windowHandle = nullptr;
+
+  JAWT_DrawingSurface* ds = awt.GetDrawingSurface(env, windowObject);
+  if (ds == nullptr) {
+    jniThrowException(env, "java/lang/Error", "Failed to get drawing surface");
+  } else {
+    jint lock = ds->Lock(ds);
+    if ((lock & JAWT_LOCK_ERROR) != 0) {
+      jniThrowException(env, "java/lang/Error", "Failed to get drawing surface lock");
+    } else {
+      JAWT_DrawingSurfaceInfo* dsi = ds->GetDrawingSurfaceInfo(ds);
+      if (dsi == nullptr) {
+        jniThrowException(env, "java/lang/Error", "Failed to get drawing surface info");
+      } else {
+
+#if defined(WIN32)
+        JAWT_Win32DrawingSurfaceInfo* wdsi = (JAWT_Win32DrawingSurfaceInfo*)dsi->platformInfo;
+        if (wdsi == nullptr) {
+          jniThrowException(env, "java/lang/Error", "Failed to get Win32 platform info");
+        } else {
+          windowHandle = (void*) wdsi->hwnd;
+        }
+#elif (__APPLE__)
+        JAWT_MacOSXDrawingSurfaceInfo* mdsi = (JAWT_MacOSXDrawingSurfaceInfo*)dsi->platformInfo;
+        if (mdsi == nullptr) {
+          jniThrowException(env, "java/lang/Error", "Failed to get OSX platform info");
+        } else {
+          // TODO: something useful
+        }
+#else
+        JAWT_X11DrawingSurfaceInfo* xdsi = (JAWT_X11DrawingSurfaceInfo*)dsi->platformInfo;
+        if (xdsi == nullptr) {
+          jniThrowException(env, "java/lang/Error", "Failed to get X11 platform info");
+        } else {
+          windowHandle = (void*) xdsi->drawable;
+        }
+#endif
+
+        ds->FreeDrawingSurfaceInfo(dsi);
+      }
+      ds->Unlock(ds);
+    }
+    awt.FreeDrawingSurface(ds);
+  }
+
+  return windowHandle;
+#endif  // NO_JAWT
+}

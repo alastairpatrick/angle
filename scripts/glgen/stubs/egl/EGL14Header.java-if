@@ -18,6 +18,8 @@
 
 package android.opengl;
 
+import java.awt.Component;
+
 /**
  * EGL 1.4
  *

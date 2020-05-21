@@ -446,3 +446,8 @@ add_jar(java_smoke_test
     "src/tests/easy/JavaSmokeTest.java"
     ENTRY_POINT TestGL
     INCLUDE_JARS android.opengl)
+    
+add_jar(window_test
+    "src/tests/easy/WindowTest.java"
+    ENTRY_POINT WindowTest
+    INCLUDE_JARS android.opengl)

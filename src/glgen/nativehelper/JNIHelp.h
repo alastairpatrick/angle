@@ -9,3 +9,4 @@ int jniHelpInitialize(JNIEnv* env);
 int jniThrowException(JNIEnv* env, const char* className, const char* msg);
 void *jniGetBufferPointer(JNIEnv *env, jobject buffer, jarray *array, jint *remaining, jint *offset);
 void *jniGetDirectBufferPointer(JNIEnv *env, jobject buffer);
+void* jniGetWindowHandle(JNIEnv *env, jobject window);

@@ -44,12 +44,6 @@ jobs:
             environment: macos-latest
             buildType: RelWithDebInfo
             javaVersion: 8
-            
-          - os: windows
-            arch: x86
-            environment: windows-2019
-            buildType: Debug
-            javaVersion: 13
 
     steps:
       - name: Checkout source code
