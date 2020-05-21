@@ -51,8 +51,9 @@ jobs:
         with:
             submodules: true
 
+      # Would also install these Ubuntu if they weren't installed by other steps: cmake, ninja-build
       - name: Set up Ubuntu packages
-        run: sudo apt-get install libx11-dev libgl1-mesa-dev xvfb
+        run: sudo apt-get install curl libgl1-mesa-dev libx11-dev xvfb 
         if: ${{startsWith(matrix.environment, 'ubuntu')}}
 
       - name: Set up JDK
