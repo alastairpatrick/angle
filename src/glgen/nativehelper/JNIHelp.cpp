@@ -4,9 +4,9 @@
 
 #if !defined(NO_JAWT)
 #if defined(WIN32)
-#include <Windows.h>
+#include <windows.h>
 #else
-include <dlfcn.h>
+#include <dlfcn.h>
 #endif  // WIN32
 #include <jawt.h>
 #include <jawt_md.h>
