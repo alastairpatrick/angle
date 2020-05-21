@@ -222,12 +222,9 @@ void* jniGetWindowHandle(JNIEnv* env, jobject windowObject) {
           windowHandle = (void*) wdsi->hwnd;
         }
 #elif (__APPLE__)
-        JAWT_MacOSXDrawingSurfaceInfo* mdsi = (JAWT_MacOSXDrawingSurfaceInfo*)dsi->platformInfo;
-        if (mdsi == nullptr) {
-          jniThrowException(env, "java/lang/Error", "Failed to get OSX platform info");
-        } else {
-          // TODO: something useful
-        }
+        // On OSX, eglCreateWindowSurface wants the "window handle" to be a CALayer.
+        // There are instructions for getting one of those in the jawt_md.h header for mac.
+        // TODO: retreive the CALayer pointer.
 #else
         JAWT_X11DrawingSurfaceInfo* xdsi = (JAWT_X11DrawingSurfaceInfo*)dsi->platformInfo;
         if (xdsi == nullptr) {
