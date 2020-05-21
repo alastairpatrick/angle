@@ -61,18 +61,12 @@ public class WindowTest {
       System.exit(1);
     }
 
-    int[] surfaceAttribs = new int[] {
-      EGL_WIDTH, width,
-      EGL_HEIGHT, height,
-      EGL_NONE,
-    };
-
     frame = new AppFrame();
     frame.setSize(width, height);
     frame.setLayout(null);
     frame.setVisible(true);
 
-    surface = eglCreateWindowSurface(display, configs[0], frame, surfaceAttribs, 0);
+    surface = eglCreateWindowSurface(display, configs[0], frame, null, 0);
     if (surface == null) {
       System.out.format("eglCreatePbufferSurface failed\n");
       System.exit(1);
@@ -90,6 +84,7 @@ public class WindowTest {
       System.exit(1);
     }
 
+    frame.repaint();
   }
   
   class AppFrame extends Frame {
