@@ -421,7 +421,7 @@ set(ANDROID_OPENGL_NATIVE_SOURCES
 add_library(android.opengl.native SHARED ${ANDROID_OPENGL_NATIVE_SOURCES})
 target_include_directories(android.opengl.native PRIVATE src/glgen ${JNI_INCLUDE_DIRS})
 target_compile_options(android.opengl.native PUBLIC ${ANDROID_OPENGL_IGNORE_WARNINGS})
-target_link_libraries(android.opengl.native PRIVATE libEGL libGLESv2 ${JNI_LIBRARIES} ${EXTRA_LIBS})
+target_link_libraries(android.opengl.native PRIVATE libEGL libGLESv2 ${JNI_LIBRARIES} ${CMAKE_DL_LIBS} ${EXTRA_LIBS})
 
 set(ANDROID_OPENGL_SOURCES
     "src/glgen/generated/android/opengl/EGL14.java"

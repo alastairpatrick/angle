@@ -12,6 +12,7 @@ android_eglCreateWindowSurface
     EGLint *attrib_list_base = (EGLint *) 0;
     jint _remaining;
     EGLint *attrib_list = (EGLint *) 0;
+    void* windowHandle = nullptr;
 
     if (attrib_list_ref) {
         if (offset < 0) {
@@ -39,7 +40,7 @@ android_eglCreateWindowSurface
         }
     }
 
-    void* windowHandle = jniGetWindowHandle(_env, win);
+    windowHandle = jniGetWindowHandle(_env, win);
     if (windowHandle) {
         _returnValue = eglCreateWindowSurface(
             (EGLDisplay)dpy_native,

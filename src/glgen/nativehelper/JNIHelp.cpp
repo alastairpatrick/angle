@@ -1,10 +1,16 @@
 #include <jni.h>
 #include <stdlib.h>
+#include <string>
 
 #if !defined(NO_JAWT)
+#if defined(WIN32)
+#include <Windows.h>
+#else
+include <dlfcn.h>
+#endif  // WIN32
 #include <jawt.h>
 #include <jawt_md.h>
-#endif
+#endif  // NO_JAWT
 
 #include "nativehelper/JNIHelp.h"
 
@@ -16,8 +22,8 @@ jint JNICALL register_android_opengl_jni_GLES31(JNIEnv *_env, jclass);
 jint JNICALL register_android_opengl_jni_GLES32(JNIEnv *_env, jclass);
 
 
-static jmethodID gAsIntBufferId, gGetBufferFieldsId;
-static jclass gJniHelpClass, gNoClassDefFoundError;
+static jmethodID gAsIntBufferId, gGetBufferFieldsId, gGetPropertyId;
+static jclass gJniHelpClass, gNoClassDefFoundError, gSystemClass;
 
 int jniHelpInitialize(JNIEnv* env) {
   jclass byteBufferClass = env->FindClass("java/nio/ByteBuffer");
@@ -35,8 +41,18 @@ int jniHelpInitialize(JNIEnv* env) {
     return -1;
   }
 
-  gNoClassDefFoundError = (jclass) env->FindClass("java/lang/NoClassDefFoundError");
+  gNoClassDefFoundError = (jclass) env->NewGlobalRef(env->FindClass("java/lang/NoClassDefFoundError"));
   if (!gNoClassDefFoundError) {
+    return -1;
+  }
+
+  gSystemClass = (jclass) env->NewGlobalRef(env->FindClass("java/lang/System"));
+  if (!gSystemClass) {
+    return -1;
+  }
+
+  gGetPropertyId = env->GetStaticMethodID(gSystemClass, "getProperty", "(Ljava/lang/String;)Ljava/lang/String;");
+  if (!gGetPropertyId) {
     return -1;
   }
 
@@ -119,14 +135,66 @@ void *jniGetDirectBufferPointer(JNIEnv *env, jobject buffer) {
 }
 
 
+std::string jniGetSystemProperty(JNIEnv* env, const char* name) {
+  std::string result;
+  jstring nameString = env->NewStringUTF(name);
+  if (name) {
+    jstring value = (jstring) env->CallStaticObjectMethod(gSystemClass, gGetPropertyId, nameString);
+    if (value) {
+      const char* ptr = env->GetStringUTFChars(value, nullptr);
+      if (ptr) {
+        result = ptr;
+        env->ReleaseStringUTFChars(value, ptr);
+      }
+    }
+  }
+  return result;
+}
+
+
 void* jniGetWindowHandle(JNIEnv* env, jobject windowObject) {
 #if defined(NO_JAWT)
   return nullptr;
 #else
-  JAWT awt = {};
-  awt.version = JAWT_VERSION_1_4;
+  typedef jboolean (JNICALL *JAWT_GetAWTFunc)(JNIEnv*,JAWT*);;
+  JAWT_GetAWTFunc pJAWT_GetAWT;
 
-  if (!JAWT_GetAWT(env, &awt)) {
+#ifdef WIN32
+  std::string javaHomeDir = jniGetSystemProperty(env, "java.home");
+  std::string modulePath = javaHomeDir + "\\bin\\jawt.dll";
+
+  HMODULE jawtModule = LoadLibraryEx(modulePath.c_str(), nullptr, LOAD_WITH_ALTERED_SEARCH_PATH);
+  if (jawtModule == nullptr) {
+    jniThrowException(env, "java/lang/UnsatisfiedLinkError", "Failed to load jawt.dll");
+    return nullptr;
+  }
+
+#if defined(_WIN64)
+  const char* functionName = "JAWT_GetAWT";
+#else
+  const char* functionName = "_JAWT_GetAWT@8";
+#endif
+  pJAWT_GetAWT = (JAWT_GetAWTFunc) GetProcAddress(jawtModule, functionName);
+
+#else
+  void* jawtModule = dlopen("libjawt.so", RTLD_LAZY | RTLD_GLOBAL);
+  if (jawtModule == nullptr) {
+    jniThrowException(env, "java/lang/UnsatisfiedLinkError", "Failed to load libjawt.so");
+    return nullptr;
+  }
+
+  pJAWT_GetAWT = (JAWT_GetAWTFunc) dlsym(jawtModule, "JAWT_GetAWT");
+#endif
+
+  if (pJAWT_GetAWT == nullptr) {
+    jniThrowException(env, "java/lang/UnsatisfiedLinkError", "Failed to import JAWT_GetAWT");
+    return nullptr;
+  }
+
+  JAWT awt = {};
+  awt.version = JAWT_VERSION_1_7;
+
+  if (!pJAWT_GetAWT(env, &awt)) {
     jniThrowException(env, "java/lang/UnsatisfiedLinkError", "Can't load JAWT");
     return nullptr;
   }
