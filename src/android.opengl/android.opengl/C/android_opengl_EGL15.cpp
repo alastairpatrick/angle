@@ -20,13 +20,14 @@
 #pragma GCC diagnostic ignored "-Wunused-function"
 
 #include "jni.h"
-#include <nativehelper/JNIHelp.h>
 
 #include <assert.h>
 #include <stdint.h>
 #include <stdlib.h>
 #include <vector>
 #include <EGL/egl.h>
+
+#include "native/JNIHelp.h"
 
 // classes from EGL 1.4
 static jclass egldisplayClass;
@@ -138,9 +139,8 @@ releasePointer(JNIEnv *_env, jarray array, void *data, jboolean commit)
 static void *
 fromEGLHandle(JNIEnv *_env, jmethodID mid, jobject obj) {
     if (obj == NULL) {
-        // NULL EGL objects can be valid, e.g as share group argument to eglCreateContext.
-        //jniThrowException(_env, "java/lang/IllegalArgumentException",
-        //                 "Object is set to null.");
+        jniThrowException(_env, "java/lang/IllegalArgumentException",
+                          "Object is set to null.");
         return nullptr;
     }
 

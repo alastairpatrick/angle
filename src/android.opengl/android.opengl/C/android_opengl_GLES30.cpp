@@ -26,10 +26,10 @@
 #include <GLES3/gl3ext.h>
 
 #include <jni.h>
-#include <nativehelper/JNIHelp.h>
 
 #include <assert.h>
 
+#include "native/JNIHelp.h"
 
 /* special calls implemented in Android's GLES wrapper used to more
  * efficiently bound-check passed arrays */

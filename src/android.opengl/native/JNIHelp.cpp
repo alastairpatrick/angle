@@ -12,7 +12,7 @@
 #include <jawt_md.h>
 #endif  // NO_JAWT
 
-#include "nativehelper/JNIHelp.h"
+#include "native/JNIHelp.h"
 
 jint JNICALL register_android_opengl_jni_EGL14(JNIEnv *_env, jclass);
 jint JNICALL register_android_opengl_jni_EGL15(JNIEnv *_env, jclass);

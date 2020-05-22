@@ -20,13 +20,14 @@
 #pragma GCC diagnostic ignored "-Wunused-function"
 
 #include "jni.h"
-#include <nativehelper/JNIHelp.h>
 
 #include <assert.h>
 #include <stdint.h>
 #include <stdlib.h>
 #include <GLES/gl.h>
 #include <GLES/glext.h>
+
+#include "native/JNIHelp.h"
 
 // Work around differences between the generated name and the actual name.
 

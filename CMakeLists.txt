@@ -409,35 +409,35 @@ else()
 endif()
 
 set(ANDROID_OPENGL_NATIVE_SOURCES
-  "src/glgen/generated/C/android_opengl_EGL14.cpp"
-  "src/glgen/generated/C/android_opengl_EGL15.cpp"
-  "src/glgen/generated/C/android_opengl_GLES20.cpp"
-  "src/glgen/generated/C/android_opengl_GLES30.cpp"
-  "src/glgen/generated/C/android_opengl_GLES31.cpp"
-  "src/glgen/generated/C/android_opengl_GLES32.cpp"
-  "src/glgen/nativehelper/EntryPoints.cpp"
-  "src/glgen/nativehelper/JNIHelp.cpp"
+  "src/android.opengl/android.opengl/C/android_opengl_EGL14.cpp"
+  "src/android.opengl/android.opengl/C/android_opengl_EGL15.cpp"
+  "src/android.opengl/android.opengl/C/android_opengl_GLES20.cpp"
+  "src/android.opengl/android.opengl/C/android_opengl_GLES30.cpp"
+  "src/android.opengl/android.opengl/C/android_opengl_GLES31.cpp"
+  "src/android.opengl/android.opengl/C/android_opengl_GLES32.cpp"
+  "src/android.opengl/native/EntryPoints.cpp"
+  "src/android.opengl/native/JNIHelp.cpp"
 )
 add_library(android.opengl.native SHARED ${ANDROID_OPENGL_NATIVE_SOURCES})
-target_include_directories(android.opengl.native PRIVATE src/glgen ${JNI_INCLUDE_DIRS})
+target_include_directories(android.opengl.native PRIVATE src/android.opengl ${JNI_INCLUDE_DIRS})
 target_compile_options(android.opengl.native PUBLIC ${ANDROID_OPENGL_IGNORE_WARNINGS})
 target_link_libraries(android.opengl.native PRIVATE libEGL libGLESv2 ${JNI_LIBRARIES} ${CMAKE_DL_LIBS} ${EXTRA_LIBS})
 
 set(ANDROID_OPENGL_SOURCES
-    "src/glgen/generated/android/opengl/EGL14.java"
-    "src/glgen/generated/android/opengl/EGL15.java"
-    "src/glgen/generated/android/opengl/EGLConfig.java"
-    "src/glgen/generated/android/opengl/EGLContext.java"
-    "src/glgen/generated/android/opengl/EGLDisplay.java"
-    "src/glgen/generated/android/opengl/EGLImage.java"
-    "src/glgen/generated/android/opengl/EGLObjectHandle.java"
-    "src/glgen/generated/android/opengl/EGLSurface.java"
-    "src/glgen/generated/android/opengl/EGLSync.java"
-    "src/glgen/generated/android/opengl/GLES20.java"
-    "src/glgen/generated/android/opengl/GLES30.java"
-    "src/glgen/generated/android/opengl/GLES31.java"
-    "src/glgen/generated/android/opengl/GLES32.java"  
-    "src/glgen/generated/android/opengl/JNIHelp.java"
+    "src/android.opengl/android.opengl/android/opengl/EGL14.java"
+    "src/android.opengl/android.opengl/android/opengl/EGL15.java"
+    "src/android.opengl/android.opengl/android/opengl/EGLConfig.java"
+    "src/android.opengl/android.opengl/android/opengl/EGLContext.java"
+    "src/android.opengl/android.opengl/android/opengl/EGLDisplay.java"
+    "src/android.opengl/android.opengl/android/opengl/EGLImage.java"
+    "src/android.opengl/android.opengl/android/opengl/EGLObjectHandle.java"
+    "src/android.opengl/android.opengl/android/opengl/EGLSurface.java"
+    "src/android.opengl/android.opengl/android/opengl/EGLSync.java"
+    "src/android.opengl/android.opengl/android/opengl/GLES20.java"
+    "src/android.opengl/android.opengl/android/opengl/GLES30.java"
+    "src/android.opengl/android.opengl/android/opengl/GLES31.java"
+    "src/android.opengl/android.opengl/android/opengl/GLES32.java"  
+    "src/android.opengl/android.opengl/android/opengl/JNIHelp.java"
 )
 add_jar(android.opengl ${ANDROID_OPENGL_SOURCES})
 

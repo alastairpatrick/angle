@@ -20,13 +20,13 @@
 #pragma GCC diagnostic ignored "-Wunused-function"
 
 #include "jni.h"
-#include <nativehelper/JNIHelp.h>
 
 #include <assert.h>
 #include <stdint.h>
 #include <stdlib.h>
 #include <EGL/egl.h>
 
+#include "native/JNIHelp.h"
 
 static jclass egldisplayClass;
 static jclass eglcontextClass;

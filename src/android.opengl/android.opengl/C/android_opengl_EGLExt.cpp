@@ -20,13 +20,14 @@
 #pragma GCC diagnostic ignored "-Wunused-function"
 
 #include "jni.h"
-#include <nativehelper/JNIHelp.h>
 
 #include <assert.h>
 #include <stdint.h>
 #include <stdlib.h>
 #include <EGL/egl.h>
 #include <EGL/eglext.h>
+
+#include "native/JNIHelp.h"
 
 static jclass egldisplayClass;
 static jclass eglcontextClass;
@@ -121,3 +122,33 @@ toEGLHandle(JNIEnv *_env, jclass cls, jmethodID con, void * handle) {
 }
 
 // --------------------------------------------------------------------------
+/* EGLBoolean eglPresentationTimeANDROID ( EGLDisplay dpy, EGLSurface sur, EGLnsecsANDROID time ) */
+static jboolean
+android_eglPresentationTimeANDROID
+  (JNIEnv *_env, jobject _this, jobject dpy, jobject sur, jlong time) {
+    EGLBoolean _returnValue = (EGLBoolean) 0;
+    EGLDisplay dpy_native = (EGLDisplay) fromEGLHandle(_env, egldisplayGetHandleID, dpy);
+    EGLSurface sur_native = (EGLSurface) fromEGLHandle(_env, eglsurfaceGetHandleID, sur);
+
+    _returnValue = eglPresentationTimeANDROID(
+        (EGLDisplay)dpy_native,
+        (EGLSurface)sur_native,
+        (EGLnsecsANDROID)time
+    );
+    return (jboolean)_returnValue;
+}
+
+static const char *classPathName = "android/opengl/EGLExt";
+
+static const JNINativeMethod methods[] = {
+{"_nativeClassInit", "()V", (void*)nativeClassInit },
+{"eglPresentationTimeANDROID", "(Landroid/opengl/EGLDisplay;Landroid/opengl/EGLSurface;J)Z", (void *) android_eglPresentationTimeANDROID },
+};
+
+jint JNICALL register_android_opengl_jni_EGLExt(JNIEnv *_env, jclass)
+{
+    jclass klass = _env->FindClass(classPathName);
+    if (!klass) return -1;
+    int err = _env->RegisterNatives(klass, methods, NELEM(methods));
+    return err;
+}

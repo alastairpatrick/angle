@@ -119,7 +119,7 @@ if [ $JAVA_RESULT -ne 0 ]; then
     exit $JAVA_RESULT
 fi
 
-GENERATED=../../src/glgen/generated
+GENERATED=../android.opengl
 
 rm -rf $GENERATED
 mkdir -p $GENERATED/C
