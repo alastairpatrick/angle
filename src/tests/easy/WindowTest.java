@@ -7,6 +7,7 @@ import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.IntBuffer;
 
+import android.opengl.EGL14;
 import android.opengl.EGLConfig;
 import android.opengl.EGLContext;
 import android.opengl.EGLDisplay;
@@ -61,16 +62,7 @@ public class WindowTest {
       System.exit(1);
     }
 
-    frame = new AppFrame();
-    frame.setSize(width, height);
-    frame.setLayout(null);
-    frame.setVisible(true);
-
-    surface = eglCreateWindowSurface(display, configs[0], frame, null, 0);
-    if (surface == null) {
-      System.out.format("eglCreatePbufferSurface failed\n");
-      System.exit(1);
-    }
+    config = configs[0];
 
     int[] contextAttribs = new int[] {
       EGL_CONTEXT_MAJOR_VERSION, 2,
@@ -78,13 +70,16 @@ public class WindowTest {
       EGL_NONE,
     };
 
-    context = eglCreateContext(display, configs[0], null, contextAttribs, 0);
+    context = eglCreateContext(display, config, EGL14.EGL_NO_CONTEXT, contextAttribs, 0);
     if (context == null) {
       System.out.format("eglCreateContext failed\n");
       System.exit(1);
     }
 
-    frame.repaint();
+    frame = new AppFrame();
+    frame.setSize(width, height);
+    frame.setLayout(null);
+    frame.setVisible(true);
   }
   
   class AppFrame extends Frame {
@@ -103,8 +98,12 @@ public class WindowTest {
     }
 
     public void paint(Graphics g) {
-      if (surface == null || context == null) {
-        return;
+      if (surface == null) {
+        surface = eglCreateWindowSurface(display, config, this, null, 0);
+        if (surface == null) {
+          System.out.format("eglCreatePbufferSurface failed\n");
+          System.exit(1);
+        }
       }
 
       if (!eglMakeCurrent(display, surface, surface, context)) {
@@ -116,10 +115,12 @@ public class WindowTest {
       glClear(GL_COLOR_BUFFER_BIT);
       eglSwapBuffers(display, surface);
     }
+
+    private EGLSurface surface;
   }
 
   private Frame frame;
   private EGLDisplay display;
-  private EGLSurface surface;
+  private EGLConfig config;
   private EGLContext context;
 }

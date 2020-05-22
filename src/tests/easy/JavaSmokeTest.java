@@ -2,6 +2,7 @@ import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.IntBuffer;
 
+import android.opengl.EGL14;
 import android.opengl.EGLConfig;
 import android.opengl.EGLContext;
 import android.opengl.EGLDisplay;
@@ -69,7 +70,7 @@ public class JavaSmokeTest {
       EGL_NONE,
     };
 
-    EGLContext context = eglCreateContext(display, configs[0], null, contextAttribs, 0);
+    EGLContext context = eglCreateContext(display, configs[0], EGL14.EGL_NO_CONTEXT, contextAttribs, 0);
     if (context == null) {
       System.out.format("eglCreateContext failed\n");
       System.exit(1);

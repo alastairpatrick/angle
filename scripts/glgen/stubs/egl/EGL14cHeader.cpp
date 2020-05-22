@@ -96,9 +96,8 @@ nativeClassInit(JNIEnv *_env, jclass glImplClass)
 static void *
 fromEGLHandle(JNIEnv *_env, jmethodID mid, jobject obj) {
     if (obj == NULL){
-        // NULL EGL objects can be valid, e.g as share group argument to eglCreateContext.
-        //jniThrowException(_env, "java/lang/IllegalArgumentException",
-        //                  "Object is set to null.");
+        jniThrowException(_env, "java/lang/IllegalArgumentException",
+                          "Object is set to null.");
         return nullptr;
     }
 
