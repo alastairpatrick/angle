@@ -26,20 +26,26 @@ jobs:
             buildType: RelWithDebInfo
             javaVersion: 8
             uploadArtifact: true
+            soPrefix: ''
+            soExtension: dll
 
           - os: windows
             arch: x64
             environment: windows-2019
             buildType: Debug
             javaVersion: 8
+            soPrefix: ''
+            soExtension: dll
             
           - os: linux
             arch: x64
             environment: ubuntu-18.04
             buildType: RelWithDebInfo
-            displayWrapper: xvfb-run
             javaVersion: 8
             uploadArtifact: true
+            displayWrapper: xvfb-run
+            soPrefix: lib
+            soExtension: so
 
           - os: osx
             arch: x64
@@ -47,6 +53,8 @@ jobs:
             buildType: RelWithDebInfo
             javaVersion: 8
             uploadArtifact: true
+            soPrefix: lib
+            soExtension: dylib
 
     steps:
       - name: Checkout source code
@@ -112,11 +120,6 @@ jobs:
       - name: Upload native shared library
         uses: actions/upload-artifact@v2
         if: ${{matrix.uploadArtifact}}
-        env:
-          artifactPath:
-            windows: android.opengl.dll
-            linux: libandroid.opengl.so
-            osx: libandroid.opengl.dylib
         with:
           name: ${{matrix.arch}}-${{matrix.os}}
-          path: ${{runner.workspace}}/out/build/${{env.artifactPath[matrix.os]}}
+          path: ${{runner.workspace}}/out/build/${{matrix.soPrefix}}android.opengl.${{matrix.soExtension}}
