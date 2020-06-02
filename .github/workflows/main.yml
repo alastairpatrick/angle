@@ -25,6 +25,7 @@ jobs:
             environment: windows-2019
             buildType: RelWithDebInfo
             javaVersion: 8
+            uploadArtifact: true
 
           - os: windows
             arch: x64
@@ -38,12 +39,14 @@ jobs:
             buildType: RelWithDebInfo
             displayWrapper: xvfb-run
             javaVersion: 8
+            uploadArtifact: true
 
           - os: osx
             arch: x64
             environment: macos-latest
             buildType: RelWithDebInfo
             javaVersion: 8
+            uploadArtifact: true
 
     steps:
       - name: Checkout source code
@@ -98,3 +101,22 @@ jobs:
           ${{matrix.displayWrapper || ''}} java -cp * -Djava.library.path=. JavaSmokeTest
         shell: bash
         working-directory: ${{runner.workspace}}/out/build
+
+      - name: Upload android.opengl JAR file
+        uses: actions/upload-artifact@v2
+        if: ${{matrix.uploadArtifact}}
+        with:
+          name: ${{matrix.arch}}-${{matrix.os}}
+          path: ${{runner.workspace}}/out/build/android.opengl.jar
+
+      - name: Upload native shared library
+        uses: actions/upload-artifact@v2
+        if: ${{matrix.uploadArtifact}}
+        env:
+          artifactPath:
+            windows: android.opengl.dll
+            linux: libandroid.opengl.so
+            osx: libandroid.opengl.dylib
+        with:
+          name: ${{matrix.arch}}-${{matrix.os}}
+          path: ${{runner.workspace}}/out/build/${{env.artifactPath[${{matrix.os}}]}}

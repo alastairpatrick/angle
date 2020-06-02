@@ -45,9 +45,9 @@ public class JNIHelp {
   }
 
   public static void loadNativeLibrary() {
-    System.loadLibrary("android.opengl.native");
+    System.loadLibrary("android.opengl");
   }
-
+  
   public static native int registerEGL14();
   public static native int registerEGL15();
   public static native int registerGLES20();
