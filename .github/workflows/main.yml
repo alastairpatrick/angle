@@ -84,7 +84,7 @@ jobs:
         run: ls ${{runner.workspace}}/out/build/
 
       - name: Run native tests
-        run: ${{matrix.displayWrapper || ''}} ${{runner.workspace}}/out/build/easy_tests
+        run: ${{matrix.displayWrapper || ''}} ${{runner.workspace}}/out/build/angle_easy_tests
 
       # The classpath separator character is different on Windows (;) versus other platforms (:). One way to avoid
       # using it is to pass * as the classpath, which causes java to put all .jar files in a directory in the classpath.

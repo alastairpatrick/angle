@@ -15,12 +15,13 @@ endif()
 find_package(GTest MODULE REQUIRED)
 find_package(Java REQUIRED)
 find_package(JNI REQUIRED)
-find_package(X11 QUIET)
+
+if(LINUX)
+find_package(X11 REQUIRED)
+endif()
 
 enable_testing()
 include(UseJava)
-
-set(CMAKE_STATIC_LIBRARY_PREFIX "")
 
 add_definitions(
     -D_CRT_SECURE_NO_DEPRECATE
@@ -318,8 +319,8 @@ else()
     set(LIBANGLE_RENDERER_COMPILEDEF )
 endif()
 
-add_library(libANGLE STATIC ${LIBANGLE_SOURCES})
-target_link_libraries(libANGLE PRIVATE
+add_library(angle_ANGLE STATIC ${LIBANGLE_SOURCES})
+target_link_libraries(angle_ANGLE PRIVATE
     angle::common
     angle::gpu_info_util
     angle::image_util
@@ -328,8 +329,8 @@ target_link_libraries(libANGLE PRIVATE
     ${LIBANGLE_RENDERER_PLATFORM}
     ${X11_LIBRARIES}
 )
-target_include_directories(libANGLE PRIVATE "src/third_party/khronos")
-target_compile_definitions(libANGLE
+target_include_directories(angle_ANGLE PRIVATE "src/third_party/khronos")
+target_compile_definitions(angle_ANGLE
     PRIVATE #-DANGLE_ENABLE_NULL
             -DLIBANGLE_IMPLEMENTATION 
             ${LIBANGLE_RENDERER_COMPILEDEF}
@@ -339,9 +340,9 @@ target_compile_definitions(libANGLE
 )
 if (MSVC)
     # To fix Error	C1128	number of sections exceeded object file format limit: compile with /bigobj	D:\src\angle\out\build\x64-Debug\angle	D:\src\angle\src\libANGLE\capture_gles_ext_autogen.cpp	1	
-    target_compile_options(libANGLE PRIVATE /bigobj)
+    target_compile_options(angle_ANGLE PRIVATE /bigobj)
 endif()
-add_library(angle::libANGLE ALIAS libANGLE)
+add_library(angle::ANGLE ALIAS angle_ANGLE)
 
 
 ##########
@@ -353,29 +354,31 @@ file(GLOB LIBGLESV2_SOURCES
 )
 list(FILTER LIBGLESV2_SOURCES EXCLUDE REGEX "proc_table_autogen|proc_table_gles_autogen") # unused, and duplicated symbols
 
-add_library(libGLESv2 STATIC ${LIBGLESV2_SOURCES})
-target_link_libraries(libGLESv2 PRIVATE angle::common angle::libANGLE)
-target_compile_definitions(libGLESv2
+add_library(angle_GLESv2 STATIC ${LIBGLESV2_SOURCES})
+target_link_libraries(angle_GLESv2 PRIVATE angle::common angle::ANGLE)
+target_compile_definitions(angle_GLESv2
     PRIVATE -DLIBGLESV2_IMPLEMENTATION
     PUBLIC -DGL_GLEXT_PROTOTYPES
            -DGL_GLES_PROTOTYPES=1
            -DGL_APICALL=
            -DGL_API=
 )
+add_library(angle::GLESv2 ALIAS angle_GLESv2)
 
 
 ##########
 # libEGL
 file(GLOB LIBEGL_SOURCES "src/libEGL/*.cpp" "src/libEGL/*.h" "src/libEGL/libEGL.def")
-add_library(libEGL STATIC ${LIBEGL_SOURCES})
-target_link_libraries(libEGL PRIVATE angle::common angle::libANGLE libGLESv2)
-target_compile_definitions(libEGL
+add_library(angle_EGL STATIC ${LIBEGL_SOURCES})
+target_link_libraries(angle_EGL PRIVATE angle::common angle::ANGLE angle::GLESv2)
+target_compile_definitions(angle_EGL
     PRIVATE -DLIBEGL_IMPLEMENTATION
     PUBLIC  -DEGL_EGL_PROTOTYPES=1
             -DEGL_EGLEXT_PROTOTYPES
             -DEGLAPI=
 
 )
+add_library(angle::EGL ALIAS angle_EGL)
 
 
 if (APPLE)
@@ -389,14 +392,14 @@ endif()
 set(EASY_TESTS_SOURCES
     "src/tests/easy/native_smoke_test.cpp"
 )
-add_executable(easy_tests ${EASY_TESTS_SOURCES})
-target_link_libraries(easy_tests PRIVATE GTest::GTest GTest::Main libEGL libGLESv2 ${EXTRA_LIBS})
-add_test(AllTestsInMain easy_tests)
+add_executable(angle_easy_tests ${EASY_TESTS_SOURCES})
+target_link_libraries(angle_easy_tests PRIVATE GTest::GTest GTest::Main angle::EGL angle::GLESv2 ${EXTRA_LIBS})
+add_test(AllTestsInMain angle_easy_tests)
 
 
 
 ##########
-# com.android.opengl bindings
+# android.opengl bindings
 
 if(MSVC)
     set(ANDROID_OPENGL_IGNORE_WARNINGS "/wd4068" "/wd4101" "/wd4244" "/wd4312")
@@ -418,10 +421,11 @@ set(ANDROID_OPENGL_NATIVE_SOURCES
   "src/android.opengl/native/EntryPoints.cpp"
   "src/android.opengl/native/JNIHelp.cpp"
 )
-add_library(android.opengl.native SHARED ${ANDROID_OPENGL_NATIVE_SOURCES})
-target_include_directories(android.opengl.native PRIVATE src/android.opengl ${JNI_INCLUDE_DIRS})
-target_compile_options(android.opengl.native PUBLIC ${ANDROID_OPENGL_IGNORE_WARNINGS})
-target_link_libraries(android.opengl.native PRIVATE libEGL libGLESv2 ${JNI_LIBRARIES} ${CMAKE_DL_LIBS} ${EXTRA_LIBS})
+add_library(android.opengl_native SHARED ${ANDROID_OPENGL_NATIVE_SOURCES})
+target_include_directories(android.opengl_native PRIVATE src/android.opengl ${JNI_INCLUDE_DIRS})
+target_compile_options(android.opengl_native PUBLIC ${ANDROID_OPENGL_IGNORE_WARNINGS})
+target_link_libraries(android.opengl_native PRIVATE angle::EGL angle::GLESv2 ${JNI_LIBRARIES} ${CMAKE_DL_LIBS} ${EXTRA_LIBS})
+set_target_properties(android.opengl_native PROPERTIES OUTPUT_NAME android.opengl)
 
 set(ANDROID_OPENGL_SOURCES
     "src/android.opengl/android.opengl/android/opengl/EGL14.java"
