@@ -119,4 +119,4 @@ jobs:
             osx: libandroid.opengl.dylib
         with:
           name: ${{matrix.arch}}-${{matrix.os}}
-          path: ${{runner.workspace}}/out/build/${{env.artifactPath[${{matrix.os}}]}}
+          path: ${{runner.workspace}}/out/build/${{env.artifactPath[matrix.os]}}
