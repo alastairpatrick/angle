@@ -16,14 +16,14 @@ jobs:
       matrix:
         os: [windows, linux, osx]
         arch: [x64]
-        buildType: [RelWithDebInfo]
+        buildType: [Release]
         javaVersion: [8]                    # Earliest supported JDK version.
 
         include:
           - os: windows
             arch: x64
             environment: windows-2019
-            buildType: RelWithDebInfo
+            buildType: Release
             javaVersion: 8
             uploadArtifact: true
             soPrefix: ''
@@ -40,7 +40,7 @@ jobs:
           - os: linux
             arch: x64
             environment: ubuntu-18.04
-            buildType: RelWithDebInfo
+            buildType: Release
             javaVersion: 8
             uploadArtifact: true
             displayWrapper: xvfb-run
@@ -50,7 +50,7 @@ jobs:
           - os: osx
             arch: x64
             environment: macos-latest
-            buildType: RelWithDebInfo
+            buildType: Release
             javaVersion: 8
             uploadArtifact: true
             soPrefix: lib
@@ -114,12 +114,12 @@ jobs:
         uses: actions/upload-artifact@v2
         if: ${{matrix.uploadArtifact}}
         with:
-          name: ${{matrix.arch}}-${{matrix.os}}
+          name: android.opengl-${{matrix.arch}}-${{matrix.os}}
           path: ${{runner.workspace}}/out/build/android.opengl.jar
 
-      - name: Upload native shared library
+      - name: Upload android.opengl native shared library
         uses: actions/upload-artifact@v2
         if: ${{matrix.uploadArtifact}}
         with:
-          name: ${{matrix.arch}}-${{matrix.os}}
+          name: android.opengl-${{matrix.arch}}-${{matrix.os}}
           path: ${{runner.workspace}}/out/build/${{matrix.soPrefix}}android.opengl.${{matrix.soExtension}}
