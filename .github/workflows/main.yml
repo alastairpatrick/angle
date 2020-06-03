@@ -15,12 +15,15 @@ jobs:
       fail-fast: false
       matrix:
         os: [windows, linux, osx]
+        arch: [x64]
+        buildType: [Release]
+        javaVersion: [8]
 
         include:
           - os: windows
             arch: x64
             environment: windows-2019
-            buildType: RelWithDebInfo
+            buildType: Release
             javaVersion: 8
             uploadArtifacts: true
             soPrefix: ''
