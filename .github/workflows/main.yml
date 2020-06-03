@@ -145,16 +145,15 @@ jobs:
 
       - name: Add to zip file
         run: |
-          set -o noglob
-          pushd ${{runner.workspace}}/artifacts/
+          mkdir -p ${{runner.workspace}}/out/resources/android/opengl
+          mkdir -p ${{runner.workspace}}/out/resources/META-INF
+          cp -r ${{runner.workspace}}/artifacts/x64-* ${{runner.workspace}}/out/resources/android/opengl/
+          cp ${{github.workspace}}/LICENSE* ${{runner.workspace}}/out/resources/META-INF
 
-          mkdir -p ${{runner.workspace}}/out/
-          cp jar/android.opengl.jar ${{runner.workspace}}/out/
+          cp ${{runner.workspace}}/artifacts/jar/android.opengl.jar ${{runner.workspace}}/out/
 
-          zip -r ${{runner.workspace}}/out/android.opengl.jar x64-windows
-          zip -r ${{runner.workspace}}/out/android.opengl.jar x64-linux
-          zip -r ${{runner.workspace}}/out/android.opengl.jar x64-osx
-
+          pushd ${{runner.workspace}}/out/resources/
+          zip -r ${{runner.workspace}}/out/android.opengl.jar android
           popd
 
       - name: Upload multi-platform JAR file
