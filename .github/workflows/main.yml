@@ -25,7 +25,8 @@ jobs:
             environment: windows-2019
             buildType: Release
             javaVersion: 8
-            uploadArtifact: true
+            uploadNative: true
+            uploadJar: true
             soPrefix: ''
             soExtension: dll
 
@@ -42,7 +43,7 @@ jobs:
             environment: ubuntu-18.04
             buildType: Release
             javaVersion: 8
-            uploadArtifact: true
+            uploadNative: true
             displayWrapper: xvfb-run
             soPrefix: lib
             soExtension: so
@@ -52,7 +53,7 @@ jobs:
             environment: macos-latest
             buildType: Release
             javaVersion: 8
-            uploadArtifact: true
+            uploadNative: true
             soPrefix: lib
             soExtension: dylib
 
@@ -112,14 +113,14 @@ jobs:
 
       - name: Upload JAR file
         uses: actions/upload-artifact@v2
-        if: ${{matrix.uploadArtifact}}
+        if: ${{matrix.uploadJar}}
         with:
-          name: android.opengl-${{matrix.arch}}-${{matrix.os}}
+          name: jar
           path: ${{runner.workspace}}/out/build/android.opengl.jar
 
       - name: Upload native shared library
         uses: actions/upload-artifact@v2
-        if: ${{matrix.uploadArtifact}}
+        if: ${{matrix.uploadNative}}
         with:
           name: ${{matrix.arch}}-${{matrix.os}}
           path: ${{runner.workspace}}/out/build/${{matrix.soPrefix}}android.opengl.${{matrix.soExtension}}
@@ -137,23 +138,24 @@ jobs:
       - name: Download all artifacts
         uses: actions/download-artifact@v2
         with:
-          path: ${{runner.workspace}}/jar-image
+          path: ${{runner.workspace}}/artifacts
 
       - name: List artifacts
-        run: ls --recursive ${{runner.workspace}}/jar-image
+        run: ls --recursive ${{runner.workspace}}/artifacts
 
       - name: Add to zip file
         run: |
           set -o noglob
 
           mkdir -p ${{runner.workspace}}/out/
-          cp ${{runner.workspace}}/jar-image/x64-windows/android.opengl.jar ${{runner.workspace}}/out/
-          find ${{runner.workspace}}/jar-image/ -name *.jar -type f -delete
+          cp ${{runner.workspace}}/artifacts/jar/android.opengl.jar ${{runner.workspace}}/out/
 
-          zip -r ${{runner.workspace}}/out/android.opengl.jar ${{runner.workspace}}/jar-image/
+          zip -r ${{runner.workspace}}/out/android.opengl.jar ${{runner.workspace}}/artifacts/x64-windows
+          zip -r ${{runner.workspace}}/out/android.opengl.jar ${{runner.workspace}}/artifacts/x64-linux
+          zip -r ${{runner.workspace}}/out/android.opengl.jar ${{runner.workspace}}/artifacts/x64-osx
 
       - name: Upload multi-platform JAR file
         uses: actions/upload-artifact@v2
         with:
-          name: android.opengl
+          name: multi
           path: ${{runner.workspace}}/out/android.opengl.jar
