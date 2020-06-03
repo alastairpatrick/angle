@@ -399,7 +399,7 @@ add_test(AllTestsInMain angle_easy_tests)
 
 
 ##########
-# android.opengl bindings
+# JANGLE bindings
 
 if(MSVC)
     set(ANDROID_OPENGL_IGNORE_WARNINGS "/wd4068" "/wd4101" "/wd4244" "/wd4312")
@@ -421,11 +421,11 @@ set(ANDROID_OPENGL_NATIVE_SOURCES
   "src/android.opengl/native/EntryPoints.cpp"
   "src/android.opengl/native/JNIHelp.cpp"
 )
-add_library(android.opengl_native SHARED ${ANDROID_OPENGL_NATIVE_SOURCES})
-target_include_directories(android.opengl_native PRIVATE src/android.opengl ${JNI_INCLUDE_DIRS})
-target_compile_options(android.opengl_native PUBLIC ${ANDROID_OPENGL_IGNORE_WARNINGS})
-target_link_libraries(android.opengl_native PRIVATE angle::EGL angle::GLESv2 ${JNI_LIBRARIES} ${CMAKE_DL_LIBS} ${EXTRA_LIBS})
-set_target_properties(android.opengl_native PROPERTIES OUTPUT_NAME android.opengl)
+add_library(JANGLE_native SHARED ${ANDROID_OPENGL_NATIVE_SOURCES})
+target_include_directories(JANGLE_native PRIVATE src/android.opengl ${JNI_INCLUDE_DIRS})
+target_compile_options(JANGLE_native PUBLIC ${ANDROID_OPENGL_IGNORE_WARNINGS})
+target_link_libraries(JANGLE_native PRIVATE angle::EGL angle::GLESv2 ${JNI_LIBRARIES} ${CMAKE_DL_LIBS} ${EXTRA_LIBS})
+set_target_properties(JANGLE_native PROPERTIES OUTPUT_NAME JANGLE)
 
 set(ANDROID_OPENGL_SOURCES
     "src/android.opengl/android.opengl/android/opengl/EGL14.java"
@@ -443,15 +443,15 @@ set(ANDROID_OPENGL_SOURCES
     "src/android.opengl/android.opengl/android/opengl/GLES32.java"  
     "src/android.opengl/android.opengl/android/opengl/JNIHelp.java"
 )
-add_jar(android.opengl ${ANDROID_OPENGL_SOURCES})
+add_jar(JANGLE ${ANDROID_OPENGL_SOURCES})
 
 
 add_jar(java_smoke_test
     "src/tests/easy/JavaSmokeTest.java"
     ENTRY_POINT TestGL
-    INCLUDE_JARS android.opengl)
+    INCLUDE_JARS JANGLE)
     
 add_jar(window_test
     "src/tests/easy/WindowTest.java"
     ENTRY_POINT WindowTest
-    INCLUDE_JARS android.opengl)
+    INCLUDE_JARS JANGLE)
