@@ -15,6 +15,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.regex.Pattern;
 
 public class JNIHelp {
   public static Object getBufferFields(Buffer buffer, int[] result) {
@@ -52,27 +53,29 @@ public class JNIHelp {
   }
 
   public static void loadNativeLibraryFromJar(String name) {
+    // With only three supported operating systems, the shared library extension is sufficient to distinguish them.
+    // Could also examine System.getProperty("os.name").
+    String filename = System.mapLibraryName(name);
     boolean canDeleteOpen = true;
-    String osName = System.getProperty("os.name").toLowerCase();
-    if (osName.startsWith("windows")) {
+    String osName;
+    if (filename.endsWith(".dll")) {
       osName = "windows";
       canDeleteOpen = false;
-    } else if (osName.startsWith("mac")) {
-      osName = "osx";
-    } else if (osName.startsWith("linux")) {
+    } else if (filename.endsWith(".so")) {
       osName = "linux";
+    } else if (filename.endsWith(".dylib")) {
+      osName = "osx";
     } else {
-      throw new UnsatisfiedLinkError("JANGLE does not support operating system '" + osName + "'");
+      throw new UnsatisfiedLinkError("JANGLE does not support this operating system");
     }
 
     String arch = System.getProperty("os.arch").toLowerCase();
-    if (arch.startsWith("amd64")) {
+    if (Pattern.matches("^(amd64|x64|x86_64)", arch)) {
       arch = "x64";
     } else {
       throw new UnsatisfiedLinkError("JANGLE does not support processor architecture '" + arch + "'");
     }
 
-    String filename = System.mapLibraryName(name);
     String resourcePath = "/android/opengl/" + arch + "-" + osName + "/" + filename;
     InputStream inStream = JNIHelp.class.getResourceAsStream(resourcePath);
     if (inStream == null) {
