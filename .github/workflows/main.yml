@@ -1,10 +1,10 @@
-name: Build ANGLE
+name: Build android.opengl
 on:
   - pull_request
   - push
 
 jobs:
-  build-angle:
+  build:
     name: ${{matrix.arch}}-${{matrix.os}}-${{matrix.buildType}}
     runs-on: ${{matrix.environment}}
 
@@ -123,3 +123,20 @@ jobs:
         with:
           name: android.opengl-${{matrix.arch}}-${{matrix.os}}
           path: ${{runner.workspace}}/out/build/${{matrix.soPrefix}}android.opengl.${{matrix.soExtension}}
+
+
+  package:
+    name: Package android.opengl
+    runs-on: ubuntu-18.04
+
+    steps:
+      - name: Checkout source code
+        uses: actions/checkout@v2
+      
+      - name: Download all artifacts
+        uses: actions/download-artifact@v2
+        with:
+          path: ${{runner.workspace}}/out/build
+
+      - name: List artifacts directory
+        run: ls ${{runner.workspace}}/out/build
