@@ -160,7 +160,7 @@ jobs:
           mkdir -p ${{runner.workspace}}/out/resources/META-INF
           cp ${{github.workspace}}/LICENSE* ${{runner.workspace}}/out/resources/META-INF
 
-          cp ${{runner.workspace}}/artifacts/jar/JANGLE.jar ${{runner.workspace}}/out/
+          cp ${{runner.workspace}}/artifacts/x64-windows/JANGLE.jar ${{runner.workspace}}/out/
           pushd ${{runner.workspace}}/out/resources/
           zip -r ${{runner.workspace}}/out/JANGLE.jar *
           popd
