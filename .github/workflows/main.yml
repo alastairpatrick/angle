@@ -126,7 +126,7 @@ jobs:
 
       - name: Upload native shared library debug information
         uses: actions/upload-artifact@v2
-        if: ${{matrix.uploadArtifacts && matrix.os == "windows"}}
+        if: ${{matrix.uploadArtifacts && matrix.os == 'windows'}}
         with:
           name: ${{matrix.arch}}-${{matrix.os}}
           path: ${{runner.workspace}}/out/build/${{matrix.soPrefix}}JANGLE.pdb
