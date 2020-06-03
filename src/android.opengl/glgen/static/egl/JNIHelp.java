@@ -45,7 +45,7 @@ public class JNIHelp {
   }
 
   public static void loadNativeLibrary() {
-    System.loadLibrary("android.opengl");
+    System.loadLibrary("JANGLE");
   }
   
   public static native int registerEGL14();
