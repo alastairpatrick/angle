@@ -219,16 +219,18 @@ jobs:
       - name: List artifacts
         run: ls --recursive ${{runner.workspace}}/artifacts
 
+      - name: Prepare Java tests
+        run: |
+          mkdir -p ${{runner.workspace}}/out
+          cp ${{runner.workspace}}/artifacts/${{matrix.arch}}-${{matrix.os}}/*.jar ${{runner.workspace}}/out
+          cp ${{runner.workspace}}/artifacts/multi/JANGLE.jar ${{runner.workspace}}/out
+
       # The classpath separator character is different on Windows (;) versus other platforms (:). One way to avoid
       # using it is to pass * as the classpath, which causes java to put all .jar files in a directory in the classpath.
       # This requires avoiding bash's globbing, which would substitute the * before java saw it.
       - name: Run Java tests
         run: |
           set -o noglob
-
-          cp ${{runner.workspace}}/artifacts/${{matrix.arch}}-${{matrix.os}}/*.jar ./
-          cp ${{runner.workspace}}/artifacts/multi/JANGLE.jar ./
-
           ${{matrix.displayWrapper || ''}} java -cp * JavaSmokeTest
         shell: bash
-        working-directory: ${{runner.workspace}}
+        working-directory: ${{runner.workspace}}/out
