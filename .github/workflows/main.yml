@@ -26,6 +26,8 @@ jobs:
             buildType: Release
             javaVersion: 8
             uploadArtifacts: true
+            soPrefix: ''
+            soExtension: dll
 
           - os: windows
             arch: x64
@@ -40,6 +42,8 @@ jobs:
             javaVersion: 8
             uploadArtifacts: true
             displayWrapper: xvfb-run
+            soPrefix: lib
+            soExtension: so
 
           - os: osx
             arch: x64
@@ -47,6 +51,8 @@ jobs:
             buildType: Release
             javaVersion: 8
             uploadArtifacts: true
+            soPrefix: lib
+            soExtension: dylib
 
     steps:
       - name: Checkout source code
@@ -109,26 +115,12 @@ jobs:
           name: ${{matrix.arch}}-${{matrix.os}}
           path: ${{runner.workspace}}/out/build/*.jar
 
-      - name: Upload Windows shared libraries
+      - name: Upload Windows shared library
         uses: actions/upload-artifact@v2
         if: ${{matrix.uploadArtifacts}}
         with:
           name: ${{matrix.arch}}-${{matrix.os}}
-          path: ${{runner.workspace}}/out/build/*.dll
-
-      - name: Upload Linux shared libraries
-        uses: actions/upload-artifact@v2
-        if: ${{matrix.uploadArtifacts}}
-        with:
-          name: ${{matrix.arch}}-${{matrix.os}}
-          path: ${{runner.workspace}}/out/build/*.so
-
-      - name: Upload OSX shared libraries
-        uses: actions/upload-artifact@v2
-        if: ${{matrix.uploadArtifacts}}
-        with:
-          name: ${{matrix.arch}}-${{matrix.os}}
-          path: ${{runner.workspace}}/out/build/*.dylib
+          path: ${{runner.workspace}}/out/build/${{soPrefix}}JANGLE.${{soExtension}}
 
   package:
     name: Package JANGLE
@@ -173,7 +165,7 @@ jobs:
           path: ${{runner.workspace}}/out/JANGLE.jar
 
   test:
-    name: Test JANGLE
+    name: Test ${{matrix.arch}}-${{matrix.os}}
     needs: package
     
     runs-on: ${{matrix.environment}}
@@ -191,26 +183,17 @@ jobs:
           - os: windows
             arch: x64
             environment: windows-2019
-            buildType: Release
-            javaVersion: 8
-
-          - os: windows
-            arch: x64
-            environment: windows-2019
-            buildType: Debug
             javaVersion: 8
             
           - os: linux
             arch: x64
             environment: ubuntu-18.04
-            buildType: Release
             javaVersion: 8
             displayWrapper: xvfb-run
 
           - os: osx
             arch: x64
             environment: macos-latest
-            buildType: Release
             javaVersion: 8
 
     steps:
@@ -242,6 +225,10 @@ jobs:
       - name: Run Java tests
         run: |
           set -o noglob
+
+          cp ${{runner.workspace}}/artifacts/${{matrix.arch}}-${{matrix.os}}/*.jar ./
+          cp ${{runner.workspace}}/artifacts/multi/JANGLE.jar ./
+
           ${{matrix.displayWrapper || ''}} java -cp * JavaSmokeTest
         shell: bash
-        working-directory: ${{runner.workspace}}/artifacts/${{matrix.arch}}-${{matrix.os}}
+        working-directory: ${{runner.workspace}}
