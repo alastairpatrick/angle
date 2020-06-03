@@ -91,7 +91,6 @@ jobs:
 
       - name: List build directory
         run: ls ${{runner.workspace}}/out/build/
-        shell: bash
 
       - name: Run native tests
         run: ${{matrix.displayWrapper || ''}} ${{runner.workspace}}/out/build/angle_easy_tests
@@ -219,7 +218,6 @@ jobs:
 
       - name: List artifacts
         run: ls -R ${{runner.workspace}}/artifacts
-        shell: bash
 
       - name: Prepare Java tests
         run: |
