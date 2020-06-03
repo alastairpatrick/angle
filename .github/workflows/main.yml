@@ -120,7 +120,7 @@ jobs:
         if: ${{matrix.uploadArtifacts}}
         with:
           name: ${{matrix.arch}}-${{matrix.os}}
-          path: ${{runner.workspace}}/out/build/${{soPrefix}}JANGLE.${{soExtension}}
+          path: ${{runner.workspace}}/out/build/${{matrix.soPrefix}}JANGLE.${{matrix.soExtension}}
 
   package:
     name: Package JANGLE
