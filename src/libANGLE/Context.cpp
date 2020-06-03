@@ -50,6 +50,20 @@ namespace gl
 {
 namespace
 {
+egl::ShareGroup *AllocateOrGetShareGroup(egl::Display *display, const gl::Context *shareContext)
+{
+    if (shareContext)
+    {
+        egl::ShareGroup *shareGroup = shareContext->getState().getShareGroup();
+        shareGroup->addRef();
+        return shareGroup;
+    }
+    else
+    {
+        return new egl::ShareGroup(display->getImplementation());
+    }
+}
+
 template <typename T>
 angle::Result GetQueryObjectParameter(const Context *context, Query *query, GLenum pname, T *params)
 {
@@ -256,6 +270,7 @@ Context::Context(egl::Display *display,
                  const egl::DisplayExtensions &displayExtensions,
                  const egl::ClientExtensions &clientExtensions)
     : mState(shareContext ? &shareContext->mState : nullptr,
+             AllocateOrGetShareGroup(display, shareContext),
              shareTextures,
              &mOverlay,
              clientType,
@@ -378,6 +393,13 @@ void Context::initialize()
         }
     }
 
+    if (getClientVersion() >= Version(3, 2) || mSupportedExtensions.textureCubeMapArrayAny())
+    {
+        Texture *zeroTextureCubeMapArray =
+            new Texture(mImplementation.get(), {0}, TextureType::CubeMapArray);
+        mZeroTextures[TextureType::CubeMapArray].set(this, zeroTextureCubeMapArray);
+    }
+
     if (mSupportedExtensions.textureRectangle)
     {
         Texture *zeroTextureRectangle =
@@ -404,6 +426,8 @@ void Context::initialize()
     }
 
     mState.initializeZeroTextures(this, mZeroTextures);
+
+    ANGLE_CONTEXT_TRY(mImplementation->initialize());
 
     bindVertexArray({0});
 
@@ -497,8 +521,6 @@ void Context::initialize()
     mCopyImageDirtyBits.set(State::DIRTY_BIT_READ_FRAMEBUFFER_BINDING);
     mCopyImageDirtyObjects.set(State::DIRTY_OBJECT_READ_FRAMEBUFFER);
 
-    ANGLE_CONTEXT_TRY(mImplementation->initialize());
-
     // Initialize overlay after implementation is initialized.
     ANGLE_CONTEXT_TRY(mOverlay.init(this));
 }
@@ -577,6 +599,7 @@ egl::Error Context::onDestroy(const egl::Display *display)
     mState.mFramebufferManager->release(this);
     mState.mMemoryObjectManager->release(this);
     mState.mSemaphoreManager->release(this);
+    mState.mShareGroup->release(this);
 
     mThreadPool.reset();
 
@@ -4782,6 +4805,9 @@ void Context::hint(GLenum target, GLenum mode)
         case GL_FOG_HINT:
             mState.gles1().setHint(target, mode);
             break;
+        case GL_TEXTURE_FILTERING_HINT_CHROMIUM:
+            mState.setTextureFilteringHint(mode);
+            break;
         default:
             UNREACHABLE();
             return;
@@ -8803,6 +8829,7 @@ void StateCache::updateValidBindTextureTypes(Context *context)
         {TextureType::External, exts.eglImageExternalOES || exts.eglStreamConsumerExternalNV},
         {TextureType::Rectangle, exts.textureRectangle},
         {TextureType::CubeMap, true},
+        {TextureType::CubeMapArray, exts.textureCubeMapArrayAny()},
         {TextureType::VideoImage, exts.webglVideoTexture},
     }};
 }

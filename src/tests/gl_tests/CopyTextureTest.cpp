@@ -867,8 +867,6 @@ constexpr GLenum kCopyTextureVariationsDstFormats[] = {GL_RGB, GL_RGBA, GL_BGRA_
 
 TEST_P(CopyTextureVariationsTest, CopyTexture)
 {
-    // http://anglebug.com/4092
-    ANGLE_SKIP_TEST_IF(IsVulkan());
     testCopyTexture(GL_TEXTURE_2D, std::get<1>(GetParam()), std::get<2>(GetParam()),
                     std::get<3>(GetParam()), std::get<4>(GetParam()), std::get<5>(GetParam()));
 }
@@ -1822,8 +1820,6 @@ TEST_P(CopyTextureTestES3, ES3FloatFormats)
     }
 
     ANGLE_SKIP_TEST_IF(!IsGLExtensionEnabled("GL_EXT_color_buffer_float"));
-    // http://anglebug.com/4092
-    ANGLE_SKIP_TEST_IF(IsVulkan());
 
     auto testOutput = [this](GLuint texture, const GLColor32F &expectedColor) {
         constexpr char kVS[] =
@@ -1939,8 +1935,6 @@ TEST_P(CopyTextureTestES3, ES3FloatFormats)
 TEST_P(CopyTextureTestES3, ES3UintFormats)
 {
     ANGLE_SKIP_TEST_IF(IsLinux() && IsOpenGL() && IsIntel());
-    // http://anglebug.com/4092
-    ANGLE_SKIP_TEST_IF(IsVulkan());
 
     if (!checkExtensions())
     {
@@ -2048,6 +2042,94 @@ TEST_P(CopyTextureTestES3, ES3UintFormats)
                         GL_UNSIGNED_BYTE, false, true, false, GLColor32U(64, 0, 0, 1));
     testCopyCombination(GL_RGBA, GL_RGBA, GL_UNSIGNED_BYTE, GLColor(120, 64, 32, 128), GL_R8UI,
                         GL_UNSIGNED_BYTE, false, false, true, GLColor32U(240, 0, 0, 1));
+}
+
+// Test that using an offset in CopySubTexture works correctly for non-renderable float targets
+TEST_P(CopyTextureTestES3, CopySubTextureOffsetNonRenderableFloat)
+{
+    if (!checkExtensions())
+    {
+        return;
+    }
+
+    ANGLE_SKIP_TEST_IF(!IsGLExtensionEnabled("GL_EXT_color_buffer_float"));
+
+    auto testOutput = [this](GLuint texture, const GLColor32F &expectedColor) {
+        constexpr char kVS[] =
+            "#version 300 es\n"
+            "in vec4 position;\n"
+            "out vec2 texcoord;\n"
+            "void main()\n"
+            "{\n"
+            "    gl_Position = vec4(position.xy, 0.0, 1.0);\n"
+            "    texcoord = (position.xy * 0.5) + 0.5;\n"
+            "}\n";
+
+        constexpr char kFS[] =
+            "#version 300 es\n"
+            "precision mediump float;\n"
+            "uniform sampler2D tex;\n"
+            "in vec2 texcoord;\n"
+            "out vec4 color;\n"
+            "void main()\n"
+            "{\n"
+            "    color = texture(tex, texcoord);\n"
+            "}\n";
+
+        ANGLE_GL_PROGRAM(program, kVS, kFS);
+        glUseProgram(program);
+
+        GLRenderbuffer rbo;
+        glBindRenderbuffer(GL_RENDERBUFFER, rbo);
+        glRenderbufferStorage(GL_RENDERBUFFER, GL_RGBA32F, 1, 1);
+
+        GLFramebuffer fbo;
+        glBindFramebuffer(GL_FRAMEBUFFER, fbo);
+        glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_RENDERBUFFER, rbo);
+
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D, texture);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+        glUniform1i(glGetUniformLocation(program.get(), "tex"), 0);
+
+        drawQuad(program, "position", 0.5f, 1.0f, true);
+
+        EXPECT_PIXEL_COLOR32F_NEAR(0, 0, expectedColor, 0.05);
+    };
+
+    auto testCopy = [this, testOutput](GLenum destInternalFormat, GLenum destFormat,
+                                       GLenum destType) {
+        GLColor rgbaPixels[4 * 4] = {GLColor::red, GLColor::green, GLColor::blue, GLColor::black};
+        glBindTexture(GL_TEXTURE_2D, mTextures[0]);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 2, 2, 0, GL_RGBA, GL_UNSIGNED_BYTE, rgbaPixels);
+
+        GLTexture destTexture;
+        glBindTexture(GL_TEXTURE_2D, destTexture);
+        glTexImage2D(GL_TEXTURE_2D, 0, destInternalFormat, 1, 1, 0, destFormat, destType, nullptr);
+
+        glCopySubTextureCHROMIUM(mTextures[0], 0, GL_TEXTURE_2D, destTexture, 0, 0, 0, 0, 0, 1, 1,
+                                 false, false, false);
+        EXPECT_GL_NO_ERROR();
+        testOutput(destTexture, kFloatRed);
+
+        glCopySubTextureCHROMIUM(mTextures[0], 0, GL_TEXTURE_2D, destTexture, 0, 0, 0, 1, 0, 1, 1,
+                                 false, false, false);
+        EXPECT_GL_NO_ERROR();
+        testOutput(destTexture, kFloatGreen);
+
+        glCopySubTextureCHROMIUM(mTextures[0], 0, GL_TEXTURE_2D, destTexture, 0, 0, 0, 0, 1, 1, 1,
+                                 false, false, false);
+        EXPECT_GL_NO_ERROR();
+        testOutput(destTexture, kFloatBlue);
+
+        glCopySubTextureCHROMIUM(mTextures[0], 0, GL_TEXTURE_2D, destTexture, 0, 0, 0, 1, 1, 1, 1,
+                                 false, false, false);
+        EXPECT_GL_NO_ERROR();
+        testOutput(destTexture, kFloatBlack);
+    };
+
+    testCopy(GL_RGB9_E5, GL_RGB, GL_FLOAT);
 }
 
 #ifdef Bool

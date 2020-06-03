@@ -43,10 +43,6 @@ static int IgnoreX11Errors(Display *, XErrorEvent *)
     return 0;
 }
 
-SwapControlData::SwapControlData()
-    : targetSwapInterval(0), maxSwapInterval(-1), currentSwapInterval(-1)
-{}
-
 class FunctionsGLGLX : public FunctionsGL
 {
   public:
@@ -92,13 +88,13 @@ DisplayGLX::~DisplayGLX() {}
 egl::Error DisplayGLX::initialize(egl::Display *display)
 {
     mEGLDisplay           = display;
-    mXDisplay             = display->getNativeDisplayId();
+    mXDisplay             = reinterpret_cast<Display *>(display->getNativeDisplayId());
     const auto &attribMap = display->getAttributeMap();
 
     // ANGLE_platform_angle allows the creation of a default display
     // using EGL_DEFAULT_DISPLAY (= nullptr). In this case just open
     // the display specified by the DISPLAY environment variable.
-    if (mXDisplay == EGL_DEFAULT_DISPLAY)
+    if (mXDisplay == reinterpret_cast<Display *>(EGL_DEFAULT_DISPLAY))
     {
         mUsesNewXDisplay = true;
         mXDisplay        = XOpenDisplay(nullptr);

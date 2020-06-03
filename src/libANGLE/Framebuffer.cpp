@@ -263,10 +263,10 @@ angle::Result InitAttachment(const Context *context, FramebufferAttachment *atta
     return angle::Result::Continue;
 }
 
-bool IsColorMaskedOut(const BlendState &blend)
+bool IsColorMaskedOut(const BlendStateExt &blendStateExt, const GLint drawbuffer)
 {
-    return (!blend.colorMaskRed && !blend.colorMaskGreen && !blend.colorMaskBlue &&
-            !blend.colorMaskAlpha);
+    ASSERT(static_cast<size_t>(drawbuffer) < blendStateExt.mMaxDrawBuffers);
+    return blendStateExt.getColorMaskIndexed(static_cast<size_t>(drawbuffer)) == 0;
 }
 
 bool IsDepthMaskedOut(const DepthStencilState &depthStencil)
@@ -284,9 +284,7 @@ bool IsClearBufferMaskedOut(const Context *context, GLenum buffer, GLint drawbuf
     switch (buffer)
     {
         case GL_COLOR:
-            ASSERT(static_cast<size_t>(drawbuffer) <
-                   context->getState().getBlendStateArray().size());
-            return IsColorMaskedOut(context->getState().getBlendStateArray()[drawbuffer]);
+            return IsColorMaskedOut(context->getState().getBlendStateExt(), drawbuffer);
         case GL_DEPTH:
             return IsDepthMaskedOut(context->getState().getDepthStencilState());
         case GL_STENCIL:
@@ -804,6 +802,8 @@ Framebuffer::Framebuffer(const Context *context, egl::Surface *surface, egl::Sur
                           FramebufferAttachment::kDefaultRenderToTextureSamples);
     }
     SetComponentTypeMask(getDrawbufferWriteType(0), 0, &mState.mDrawBufferTypeMask);
+
+    mState.mSurfaceTextureOffset = surface->getTextureOffset();
 
     // Ensure the backend has a chance to synchronize its content for a new backbuffer.
     mDirtyBits.set(DIRTY_BIT_COLOR_BUFFER_CONTENTS_0);
@@ -1725,6 +1725,11 @@ angle::Result Framebuffer::getSamplePosition(const Context *context,
 bool Framebuffer::hasValidDepthStencil() const
 {
     return mState.getDepthStencilAttachment() != nullptr;
+}
+
+const gl::Offset &Framebuffer::getSurfaceTextureOffset() const
+{
+    return mState.getSurfaceTextureOffset();
 }
 
 void Framebuffer::setAttachment(const Context *context,

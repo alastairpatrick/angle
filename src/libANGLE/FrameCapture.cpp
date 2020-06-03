@@ -16,8 +16,10 @@
 
 #include "sys/stat.h"
 
+#include "common/mathutil.h"
 #include "common/system_utils.h"
 #include "libANGLE/Context.h"
+#include "libANGLE/Fence.h"
 #include "libANGLE/Framebuffer.h"
 #include "libANGLE/Query.h"
 #include "libANGLE/ResourceMap.h"
@@ -47,6 +49,8 @@ constexpr char kFrameStartVarName[]   = "ANGLE_CAPTURE_FRAME_START";
 constexpr char kFrameEndVarName[]     = "ANGLE_CAPTURE_FRAME_END";
 constexpr char kCaptureLabel[]        = "ANGLE_CAPTURE_LABEL";
 constexpr char kCompression[]         = "ANGLE_CAPTURE_COMPRESSION";
+
+constexpr size_t kBinaryAlignment = 16;
 
 #if defined(ANGLE_PLATFORM_ANDROID)
 
@@ -280,26 +284,6 @@ void WriteInlineData(const std::vector<uint8_t> &vec, std::ostream &out)
 }
 
 template <>
-void WriteInlineData<GLfloat>(const std::vector<uint8_t> &vec, std::ostream &out)
-{
-    const float *data = reinterpret_cast<const GLfloat *>(vec.data());
-    size_t count      = vec.size() / sizeof(GLfloat);
-
-    if (data == nullptr)
-    {
-        return;
-    }
-
-    WriteGLFloatValue(out, data[0]);
-
-    for (size_t dataIndex = 1; dataIndex < count; ++dataIndex)
-    {
-        out << ", ";
-        WriteGLFloatValue(out, data[dataIndex]);
-    }
-}
-
-template <>
 void WriteInlineData<GLchar>(const std::vector<uint8_t> &vec, std::ostream &out)
 {
     const GLchar *data = reinterpret_cast<const GLchar *>(vec.data());
@@ -322,8 +306,6 @@ void WriteInlineData<GLchar>(const std::vector<uint8_t> &vec, std::ostream &out)
 
     out << "\"";
 }
-
-constexpr size_t kInlineDataThreshold = 128;
 
 void WriteStringParamReplay(std::ostream &out, const ParamCapture &param)
 {
@@ -405,67 +387,39 @@ void WriteBinaryParamReplay(DataCounters *counters,
     ASSERT(param.data.size() == 1);
     const std::vector<uint8_t> &data = param.data[0];
 
-    if (data.size() > kInlineDataThreshold)
+    ParamType overrideType = param.type;
+    if (param.type == ParamType::TGLvoidConstPointer || param.type == ParamType::TvoidConstPointer)
     {
-        size_t offset = binaryData->size();
-        binaryData->resize(offset + data.size());
-        memcpy(binaryData->data() + offset, data.data(), data.size());
-        if (param.type == ParamType::TvoidConstPointer || param.type == ParamType::TvoidPointer)
+        overrideType = ParamType::TGLubyteConstPointer;
+    }
+    if (overrideType == ParamType::TGLenumConstPointer || overrideType == ParamType::TGLcharPointer)
+    {
+        // Inline if data are of type string or enum
+        std::string paramTypeString = ParamTypeToString(param.type);
+        header << paramTypeString.substr(0, paramTypeString.length() - 1);
+        WriteParamStaticVarName(call, param, counter, header);
+        header << "[] = { ";
+        if (overrideType == ParamType::TGLenumConstPointer)
         {
-            out << "&gBinaryData[" << offset << "]";
+            WriteInlineData<GLuint>(data, header);
         }
         else
         {
-            out << "reinterpret_cast<" << ParamTypeToString(param.type) << ">(&gBinaryData["
-                << offset << "])";
+            ASSERT(overrideType == ParamType::TGLcharPointer);
+            WriteInlineData<GLchar>(data, header);
         }
+        header << " };\n";
+        WriteParamStaticVarName(call, param, counter, out);
     }
     else
     {
-        ParamType overrideType = param.type;
-        if (param.type == ParamType::TGLvoidConstPointer ||
-            param.type == ParamType::TvoidConstPointer)
-        {
-            overrideType = ParamType::TGLubyteConstPointer;
-        }
-
-        std::string paramTypeString = ParamTypeToString(overrideType);
-        header << paramTypeString.substr(0, paramTypeString.length() - 1);
-        WriteParamStaticVarName(call, param, counter, header);
-
-        header << "[] = { ";
-
-        switch (overrideType)
-        {
-            case ParamType::TGLintConstPointer:
-                WriteInlineData<GLint>(data, header);
-                break;
-            case ParamType::TGLshortConstPointer:
-                WriteInlineData<GLshort>(data, header);
-                break;
-            case ParamType::TGLfloatConstPointer:
-                WriteInlineData<GLfloat>(data, header);
-                break;
-            case ParamType::TGLubyteConstPointer:
-                WriteInlineData<GLubyte, int>(data, header);
-                break;
-            case ParamType::TGLuintConstPointer:
-            case ParamType::TGLenumConstPointer:
-                WriteInlineData<GLuint>(data, header);
-                break;
-            case ParamType::TGLcharPointer:
-                WriteInlineData<GLchar>(data, header);
-                break;
-            default:
-                INFO() << "Unhandled ParamType: " << angle::ParamTypeToString(overrideType)
-                       << " in " << call.name();
-                UNIMPLEMENTED();
-                break;
-        }
-
-        header << " };\n";
-
-        WriteParamStaticVarName(call, param, counter, out);
+        // Store in binary file if data are not of type string or enum
+        // Round up to 16-byte boundary for cross ABI safety
+        size_t offset = rx::roundUp(binaryData->size(), kBinaryAlignment);
+        binaryData->resize(offset + data.size());
+        memcpy(binaryData->data() + offset, data.data(), data.size());
+        out << "reinterpret_cast<" << ParamTypeToString(overrideType) << ">(&gBinaryData[" << offset
+            << "])";
     }
 }
 
@@ -1121,7 +1075,7 @@ void WriteCppReplayIndexFiles(bool compression,
     source << "    if (fp == 0)\n";
     source << "    {\n";
     source << "        fprintf(stderr, \"Error loading binary data file: %s\\n\", fileName);\n";
-    source << "        exit(1);\n";
+    source << "        return;\n";
     source << "    }\n";
     source << "    fseek(fp, 0, SEEK_END);\n";
     source << "    long size = ftell(fp);\n";
@@ -1644,6 +1598,7 @@ void CaptureUpdateUniformValues(const gl::State &replayState,
                 }
                 break;
             }
+            case GL_BOOL:
             case GL_UNSIGNED_INT:
             {
                 std::vector<GLuint> uniformBuffer(uniformSize);
@@ -1892,8 +1847,9 @@ void CaptureMidExecutionSetup(const gl::Context *context,
                               const TextureLevelDataMap &cachedTextureLevelData)
 {
     const gl::State &apiState = context->getState();
-    gl::State replayState(nullptr, nullptr, nullptr, EGL_OPENGL_ES_API, apiState.getClientVersion(),
-                          false, true, true, true, false, EGL_CONTEXT_PRIORITY_MEDIUM_IMG);
+    gl::State replayState(nullptr, nullptr, nullptr, nullptr, EGL_OPENGL_ES_API,
+                          apiState.getClientVersion(), false, true, true, true, false,
+                          EGL_CONTEXT_PRIORITY_MEDIUM_IMG);
 
     // Small helper function to make the code more readable.
     auto cap = [setupCalls](CallCapture &&call) { setupCalls->emplace_back(std::move(call)); };
@@ -2637,6 +2593,20 @@ void CaptureMidExecutionSetup(const gl::Context *context,
         }
     }
 
+    // Capture Sync Objects
+    const gl::SyncManager &syncs = apiState.getSyncManagerForCapture();
+    for (const auto &syncIter : syncs)
+    {
+        GLsync syncID  = reinterpret_cast<GLsync>(syncIter.first);
+        gl::Sync *sync = syncIter.second;
+
+        if (!sync)
+        {
+            continue;
+        }
+        cap(CaptureFenceSync(replayState, true, sync->getCondition(), sync->getFlags(), syncID));
+    }
+
     // Capture GL Context states.
     // TODO(http://anglebug.com/3662): Complete state capture.
     auto capCap = [cap, &replayState](GLenum capEnum, bool capValue) {
@@ -2894,14 +2864,6 @@ void CaptureMidExecutionSetup(const gl::Context *context,
     if (apiState.isDitherEnabled())
     {
         capCap(GL_DITHER, apiState.isDitherEnabled());
-    }
-
-    const gl::SyncManager &syncs = apiState.getSyncManagerForCapture();
-    for (const auto &syncIter : syncs)
-    {
-        // TODO: Create existing sync objects (http://anglebug.com/3662)
-        (void)syncIter;
-        UNIMPLEMENTED();
     }
 
     // Allow the replayState object to be destroyed conveniently.

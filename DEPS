@@ -22,10 +22,10 @@ vars = {
   'chromium_revision': 'b0410bba028cf153be2d02e36b6e99b59fdcb000',
 
   # Current revision of VK-GL-CTS (a.k.a dEQP).
-  'vk_gl_cts_revision': '60972ed7fa8fb66b64e21186e7fb13dc082bdac8',
+  'vk_gl_cts_revision': '80dc8399b06352e7b46c380ecffaa9a7918f68a8',
 
   # Current revision of glslang, the Khronos SPIRV compiler.
-  'glslang_revision': '4fa68edd68197a8c77779942b5d973f89c621752',
+  'glslang_revision': '78a3c915a1d70cf236588cc3c88f4db0566494a4',
 
   # Current revision of googletest.
   # Note: this dep cannot be auto-rolled b/c of nesting.
@@ -43,22 +43,22 @@ vars = {
   'spirv_cross_revision': 'f38cbeb814c73510b85697adbe5e894f9eac978f',
 
   # Current revision fo the SPIRV-Headers Vulkan support library.
-  'spirv_headers_revision': 'f8bf11a0253a32375c32cad92c841237b96696c0',
+  'spirv_headers_revision': 'ac638f1815425403e946d0ab78bac71d2bdbf3be',
 
   # Current revision of SPIRV-Tools for Vulkan.
-  'spirv_tools_revision': '63fa9114a931bd584034f41ff1e405aa98c538d2',
+  'spirv_tools_revision': '636f449e1529a10d259eb7dc37d97192cf2820f8',
 
   # Current revision of Khronos Vulkan-Headers.
-  'vulkan_headers_revision': '9250d5ae8f50202005233dc0512a1d460c8b4833',
+  'vulkan_headers_revision': 'db1a98c6cc430725669ea10eb6a35b3584d5f3ab',
 
   # Current revision of Khronos Vulkan-Loader.
-  'vulkan_loader_revision': 'aaba2f0ac575b515567124420ebdcb866b9376ac',
+  'vulkan_loader_revision': '006586926adece57adea3e006140b5df19826371',
 
   # Current revision of Khronos Vulkan-Tools.
-  'vulkan_tools_revision': '7bcbfd304f8bf079cdd477208f69da7a7f870344',
+  'vulkan_tools_revision': '322784a873be43731be6eca906cbfc895fe59f00',
 
   # Current revision of Khronos Vulkan-ValidationLayers.
-  'vulkan_validation_revision': '73680f59c04ae28f3f369ddf9e10d46a2f86c936',
+  'vulkan_validation_revision': 'd43f5107400d5f496088b8a8beb0663433f62c65',
 
   # Three lines of non-changing comments so that
   # the commit queue can handle CLs rolling catapult
@@ -192,7 +192,7 @@ deps = {
   },
 
   'third_party/SwiftShader': {
-    'url': '{swiftshader_git}/SwiftShader@d748e1651af8254eec5d4f5c561713dc85d14ab6',
+    'url': '{swiftshader_git}/SwiftShader@3ad285a60d820e94f5a5c31b1e3f0cf15468fae7',
     'condition': 'not build_with_chromium',
   },
 
@@ -245,12 +245,12 @@ deps = {
 
   'third_party/catapult': {
     'url': '{chromium_git}/catapult.git@{catapult_revision}',
-    'condition': 'not build_with_chromium',
+    'condition': 'checkout_android and not build_with_chromium',
   },
 
   'third_party/android_ndk': {
     'url': '{chromium_git}/android_ndk.git@27c0a8d090c666a50e40fceb4ee5b40b1a2d3f87',
-    'condition': 'not build_with_chromium',
+    'condition': 'checkout_android and not build_with_chromium',
   },
 }
 

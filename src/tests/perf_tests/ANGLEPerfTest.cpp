@@ -409,7 +409,8 @@ ANGLERenderTest::ANGLERenderTest(const std::string &name, const RenderTestParams
       mTestParams(testParams),
       mIsTimestampQueryAvailable(false),
       mGLWindow(nullptr),
-      mOSWindow(nullptr)
+      mOSWindow(nullptr),
+      mSwapEnabled(true)
 {
     // Force fast tests to make sure our slowest bots don't time out.
     if (OneFrame())
@@ -505,6 +506,14 @@ void ANGLERenderTest::SetUp()
     // Override platform method parameter.
     EGLPlatformParameters withMethods = mTestParams.eglParameters;
     withMethods.platformMethods       = &mPlatformMethods;
+
+    // Request a common framebuffer config
+    mConfigParams.redBits     = 8;
+    mConfigParams.greenBits   = 8;
+    mConfigParams.blueBits    = 8;
+    mConfigParams.alphaBits   = 8;
+    mConfigParams.depthBits   = 24;
+    mConfigParams.stencilBits = 8;
 
     if (!mGLWindow->initializeGL(mOSWindow, mEntryPointsLib.get(), mTestParams.driver, withMethods,
                                  mConfigParams))
@@ -668,7 +677,10 @@ void ANGLERenderTest::step()
         // internal command queue to the GPU. This is enabled for null back-end
         // devices because some back-ends (e.g. Vulkan) also accumulate internal
         // command queues.
-        mGLWindow->swap();
+        if (mSwapEnabled)
+        {
+            mGLWindow->swap();
+        }
         mOSWindow->messageLoop();
 
 #if defined(ANGLE_ENABLE_ASSERTS)

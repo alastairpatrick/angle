@@ -20,6 +20,8 @@ declare_args() {
 _vulkan_backend_sources = [
   "BufferVk.cpp",
   "BufferVk.h",
+  "CommandProcessor.cpp",
+  "CommandProcessor.h",
   "CompilerVk.cpp",
   "CompilerVk.h",
   "ContextVk.cpp",
@@ -87,6 +89,7 @@ _vulkan_backend_sources = [
   "vk_format_table_autogen.cpp",
   "vk_format_utils.cpp",
   "vk_format_utils.h",
+  "vk_google_filtering_precision.h",
   "vk_helpers.cpp",
   "vk_helpers.h",
   "vk_internal_shaders_autogen.cpp",
@@ -246,6 +249,13 @@ angle_source_set("angle_vulkan_backend") {
   public_configs = [ ":angle_vulkan_backend_config" ]
 
   data_deps = []
+
+  defines = []
+
+  if (angle_enable_vulkan_validation_layers) {
+    defines += [ "ANGLE_ENABLE_VULKAN_VALIDATION_LAYERS_BY_DEFAULT" ]
+    data_deps += [ "$angle_root/src/common/vulkan:vulkan_validation_layers" ]
+  }
 
   if (is_android) {
     libs += [ "vulkan" ]

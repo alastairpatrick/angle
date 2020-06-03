@@ -32,6 +32,7 @@
 #include "libANGLE/renderer/vulkan/VertexArrayVk.h"
 #include "libANGLE/renderer/vulkan/vk_caps_utils.h"
 #include "libANGLE/renderer/vulkan/vk_format_utils.h"
+#include "libANGLE/renderer/vulkan/vk_google_filtering_precision.h"
 #include "libANGLE/trace.h"
 #include "platform/Platform.h"
 
@@ -469,6 +470,12 @@ RendererVk::~RendererVk()
 
 void RendererVk::onDestroy()
 {
+    if (getFeatures().enableCommandProcessingThread.enabled)
+    {
+        // Shutdown worker thread
+        mCommandProcessor.shutdown(&mCommandProcessorThread);
+    }
+
     // Force all commands to finish by flushing all queues.
     for (VkQueue queue : mQueues)
     {
@@ -497,8 +504,9 @@ void RendererVk::onDestroy()
 
     mPipelineCache.destroy(mDevice);
     mSamplerCache.destroy(this);
+    mTheNullBuffer.destroy(this);
 
-    vma::DestroyAllocator(mAllocator);
+    mAllocator.destroy();
 
     if (mGlslangInitialized)
     {
@@ -818,10 +826,20 @@ angle::Result RendererVk::initialize(DisplayVk *displayVk,
     }
 
     // Create VMA allocator
-    ANGLE_VK_TRY(displayVk, vma::InitAllocator(mPhysicalDevice, mDevice, mInstance, &mAllocator));
+    ANGLE_VK_TRY(displayVk, mAllocator.init(mPhysicalDevice, mDevice, mInstance));
 
     // Store the physical device memory properties so we can find the right memory pools.
     mMemoryProperties.init(mPhysicalDevice);
+
+    // Must be initialized after the allocator and memory properties.
+    {
+        VkBufferCreateInfo bufferCreateInfo = {};
+        bufferCreateInfo.sType              = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
+        bufferCreateInfo.size               = 16;
+        bufferCreateInfo.usage              = VK_BUFFER_USAGE_VERTEX_BUFFER_BIT;
+        ANGLE_TRY(
+            mTheNullBuffer.init(displayVk, bufferCreateInfo, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT));
+    }
 
     if (!mGlslangInitialized)
     {
@@ -832,6 +850,11 @@ angle::Result RendererVk::initialize(DisplayVk *displayVk,
     // Initialize the format table.
     mFormatTable.initialize(this, &mNativeTextureCaps, &mNativeCaps.compressedTextureFormats);
 
+    if (getFeatures().enableCommandProcessingThread.enabled)
+    {
+        mCommandProcessorThread =
+            std::thread(&CommandProcessor::processCommandProcessorTasks, &mCommandProcessor);
+    }
     return angle::Result::Continue;
 }
 
@@ -1081,6 +1104,17 @@ angle::Result RendererVk::initializeDevice(DisplayVk *displayVk, uint32_t queueF
     }
 #else
     ASSERT(!getFeatures().supportsAndroidHardwareBuffer.enabled);
+#endif
+
+#if defined(ANGLE_PLATFORM_GGP)
+    if (getFeatures().supportsGGPFrameToken.enabled)
+    {
+        enabledDeviceExtensions.push_back(VK_GGP_FRAME_TOKEN_EXTENSION_NAME);
+    }
+    ANGLE_VK_CHECK(displayVk, getFeatures().supportsGGPFrameToken.enabled,
+                   VK_ERROR_EXTENSION_NOT_PRESENT);
+#else
+    ASSERT(!getFeatures().supportsGGPFrameToken.enabled);
 #endif
 
     if (getFeatures().supportsAndroidHardwareBuffer.enabled ||
@@ -1498,7 +1532,7 @@ gl::Version RendererVk::getMaxSupportedESVersion() const
 
 gl::Version RendererVk::getMaxConformantESVersion() const
 {
-    return LimitVersionTo(getMaxSupportedESVersion(), {3, 0});
+    return LimitVersionTo(getMaxSupportedESVersion(), {3, 1});
 }
 
 void RendererVk::initFeatures(DisplayVk *displayVk, const ExtensionNameList &deviceExtensionNames)
@@ -1585,6 +1619,12 @@ void RendererVk::initFeatures(DisplayVk *displayVk, const ExtensionNameList &dev
             ExtensionFound(VK_EXT_QUEUE_FAMILY_FOREIGN_EXTENSION_NAME, deviceExtensionNames));
 #endif
 
+#if defined(ANGLE_PLATFORM_GGP)
+    ANGLE_FEATURE_CONDITION(
+        &mFeatures, supportsGGPFrameToken,
+        ExtensionFound(VK_GGP_FRAME_TOKEN_EXTENSION_NAME, deviceExtensionNames));
+#endif
+
     ANGLE_FEATURE_CONDITION(
         &mFeatures, supportsExternalMemoryFd,
         ExtensionFound(VK_KHR_EXTERNAL_MEMORY_FD_EXTENSION_NAME, deviceExtensionNames));
@@ -1592,6 +1632,10 @@ void RendererVk::initFeatures(DisplayVk *displayVk, const ExtensionNameList &dev
     ANGLE_FEATURE_CONDITION(
         &mFeatures, supportsExternalMemoryFuchsia,
         ExtensionFound(VK_FUCHSIA_EXTERNAL_MEMORY_EXTENSION_NAME, deviceExtensionNames));
+
+    ANGLE_FEATURE_CONDITION(
+        &mFeatures, supportsFilteringPrecision,
+        ExtensionFound(VK_GOOGLE_SAMPLER_FILTERING_PRECISION_EXTENSION_NAME, deviceExtensionNames));
 
     ANGLE_FEATURE_CONDITION(
         &mFeatures, supportsExternalFenceCapabilities,
@@ -1687,6 +1731,11 @@ void RendererVk::initFeatures(DisplayVk *displayVk, const ExtensionNameList &dev
     ANGLE_FEATURE_CONDITION(&mFeatures, enablePrecisionQualifiers, false);
 
     ANGLE_FEATURE_CONDITION(&mFeatures, supportDepthStencilRenderingFeedbackLoops, true);
+
+    ANGLE_FEATURE_CONDITION(&mFeatures, preferAggregateBarrierCalls, isNvidia || isAMD || isIntel);
+
+    // Currently disabled by default: http://anglebug.com/4324
+    ANGLE_FEATURE_CONDITION(&mFeatures, enableCommandProcessingThread, false);
 
     angle::PlatformMethods *platform = ANGLEPlatformCurrent();
     platform->overrideFeaturesVk(platform, &mFeatures);
@@ -1918,6 +1967,14 @@ angle::Result RendererVk::queueSubmit(vk::Context *context,
                                       const vk::Fence *fence,
                                       Serial *serialOut)
 {
+    if (getFeatures().enableCommandProcessingThread.enabled)
+    {
+        // For initial threading phase 1 code make sure any outstanding command processing
+        //  is complete.
+        // TODO: b/153666475 For phase2 investigate if this is required as most submits will take
+        //  place through worker thread except for one-off submits below.
+        mCommandProcessor.waitForWorkComplete();
+    }
     {
         std::lock_guard<decltype(mQueueMutex)> lock(mQueueMutex);
         VkFence handle = fence ? fence->getHandle() : VK_NULL_HANDLE;
@@ -1936,6 +1993,7 @@ angle::Result RendererVk::queueSubmit(vk::Context *context,
 angle::Result RendererVk::queueSubmitOneOff(vk::Context *context,
                                             vk::PrimaryCommandBuffer &&primary,
                                             egl::ContextPriority priority,
+                                            const vk::Fence *fence,
                                             Serial *serialOut)
 {
     VkSubmitInfo submitInfo       = {};
@@ -1943,7 +2001,7 @@ angle::Result RendererVk::queueSubmitOneOff(vk::Context *context,
     submitInfo.commandBufferCount = 1;
     submitInfo.pCommandBuffers    = primary.ptr();
 
-    ANGLE_TRY(queueSubmit(context, priority, submitInfo, nullptr, serialOut));
+    ANGLE_TRY(queueSubmit(context, priority, submitInfo, fence, serialOut));
 
     mPendingOneOffCommands.push_back({*serialOut, std::move(primary)});
 
@@ -1952,6 +2010,11 @@ angle::Result RendererVk::queueSubmitOneOff(vk::Context *context,
 
 angle::Result RendererVk::queueWaitIdle(vk::Context *context, egl::ContextPriority priority)
 {
+    if (getFeatures().enableCommandProcessingThread.enabled)
+    {
+        // First make sure command processor is complete when waiting for queue idle.
+        mCommandProcessor.waitForWorkComplete();
+    }
     {
         std::lock_guard<decltype(mQueueMutex)> lock(mQueueMutex);
         ANGLE_VK_TRY(context, vkQueueWaitIdle(mQueues[priority]));
@@ -1964,6 +2027,11 @@ angle::Result RendererVk::queueWaitIdle(vk::Context *context, egl::ContextPriori
 
 angle::Result RendererVk::deviceWaitIdle(vk::Context *context)
 {
+    if (getFeatures().enableCommandProcessingThread.enabled)
+    {
+        // First make sure command processor is complete when waiting for device idle.
+        mCommandProcessor.waitForWorkComplete();
+    }
     {
         std::lock_guard<decltype(mQueueMutex)> lock(mQueueMutex);
         ANGLE_VK_TRY(context, vkDeviceWaitIdle(mDevice));
@@ -1978,6 +2046,13 @@ VkResult RendererVk::queuePresent(egl::ContextPriority priority,
                                   const VkPresentInfoKHR &presentInfo)
 {
     ANGLE_TRACE_EVENT0("gpu.angle", "RendererVk::queuePresent");
+
+    if (getFeatures().enableCommandProcessingThread.enabled)
+    {
+        // First make sure command processor is complete before queue present as
+        //  present may have dependencies on that thread.
+        mCommandProcessor.waitForWorkComplete();
+    }
 
     std::lock_guard<decltype(mQueueMutex)> lock(mQueueMutex);
 

@@ -95,6 +95,7 @@ bool SwizzleState::operator!=(const SwizzleState &other) const
 TextureState::TextureState(TextureType type)
     : mType(type),
       mSamplerState(SamplerState::CreateDefaultForTarget(type)),
+      mSrgbOverride(SrgbOverride::Default),
       mBaseLevel(0),
       mMaxLevel(1000),
       mDepthStencilTextureMode(GL_DEPTH_COMPONENT),
@@ -484,7 +485,7 @@ bool TextureState::computeLevelCompleteness(TextureTarget target, size_t level) 
             return false;
         }
     }
-    else if (mType == TextureType::_2DArray)
+    else if (IsArrayTextureType(mType))
     {
         if (levelImageDesc.size.depth != baseImageDesc.size.depth)
         {
@@ -599,7 +600,7 @@ void TextureState::setImageDescChain(GLuint baseLevel,
         int relativeLevel = (level - baseLevel);
         Extents levelSize(std::max<int>(baseSize.width >> relativeLevel, 1),
                           std::max<int>(baseSize.height >> relativeLevel, 1),
-                          (mType == TextureType::_2DArray)
+                          (IsArrayTextureType(mType))
                               ? baseSize.depth
                               : std::max<int>(baseSize.depth >> relativeLevel, 1));
         ImageDesc levelInfo(levelSize, format, initState);
@@ -857,6 +858,22 @@ void Texture::setSRGBDecode(const Context *context, GLenum sRGBDecode)
 GLenum Texture::getSRGBDecode() const
 {
     return mState.mSamplerState.getSRGBDecode();
+}
+
+void Texture::setSRGBOverride(const Context *context, GLenum sRGBOverride)
+{
+    SrgbOverride oldOverride = mState.mSrgbOverride;
+    mState.mSrgbOverride =
+        (sRGBOverride == GL_SRGB) ? SrgbOverride::Enabled : SrgbOverride::Default;
+    if (mState.mSrgbOverride != oldOverride)
+    {
+        signalDirtyState(DIRTY_BIT_SRGB_OVERRIDE);
+    }
+}
+
+GLenum Texture::getSRGBOverride() const
+{
+    return (mState.mSrgbOverride == SrgbOverride::Enabled) ? GL_SRGB : GL_NONE;
 }
 
 const SamplerState &Texture::getSamplerState() const

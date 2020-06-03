@@ -842,7 +842,7 @@ EGLSync EGLAPIENTRY EGL_CreateSync(EGLDisplay dpy, EGLenum type, const EGLAttrib
     egl::Display *currentDisplay = currentContext ? currentContext->getDisplay() : nullptr;
 
     ANGLE_EGL_TRY_RETURN(
-        thread, ValidateCreateSyncKHR(display, type, attributes, currentDisplay, currentContext),
+        thread, ValidateCreateSync(display, type, attributes, currentDisplay, currentContext),
         "eglCreateSync", GetDisplayIfValid(display), EGL_NO_SYNC);
 
     egl::Sync *syncObject = nullptr;
@@ -1085,7 +1085,7 @@ __eglMustCastToProperFunctionPointerType EGLAPIENTRY EGL_GetProcAddress(const ch
     FUNC_EVENT("const char *procname = \"%s\"", procname);
     Thread *thread = egl::GetCurrentThread();
 
-    ProcEntry *entry =
+    const ProcEntry *entry =
         std::lower_bound(&g_procTable[0], &g_procTable[g_numProcs], procname, CompareProc);
 
     thread->setSuccess();
