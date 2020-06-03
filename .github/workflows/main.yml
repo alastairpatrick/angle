@@ -26,16 +26,12 @@ jobs:
             buildType: Release
             javaVersion: 8
             uploadArtifacts: true
-            soPrefix: ''
-            soExtension: dll
 
           - os: windows
             arch: x64
             environment: windows-2019
             buildType: Debug
             javaVersion: 8
-            soPrefix: ''
-            soExtension: dll
             
           - os: linux
             arch: x64
@@ -44,8 +40,6 @@ jobs:
             javaVersion: 8
             uploadArtifacts: true
             displayWrapper: xvfb-run
-            soPrefix: lib
-            soExtension: so
 
           - os: osx
             arch: x64
@@ -53,8 +47,6 @@ jobs:
             buildType: Release
             javaVersion: 8
             uploadArtifacts: true
-            soPrefix: lib
-            soExtension: dylib
 
     steps:
       - name: Checkout source code
@@ -110,27 +102,33 @@ jobs:
         shell: bash
         working-directory: ${{runner.workspace}}/out/build
 
-      - name: Upload JAR file
+      - name: Upload JAR files
         uses: actions/upload-artifact@v2
         if: ${{matrix.uploadArtifacts}}
         with:
           name: ${{matrix.arch}}-${{matrix.os}}
-          path: ${{runner.workspace}}/out/build/JANGLE.jar
+          path: ${{runner.workspace}}/out/build/*.jar
 
-      - name: Upload native shared library
+      - name: Upload Windows shared libraries
         uses: actions/upload-artifact@v2
         if: ${{matrix.uploadArtifacts}}
         with:
           name: ${{matrix.arch}}-${{matrix.os}}
-          path: ${{runner.workspace}}/out/build/${{matrix.soPrefix}}JANGLE.${{matrix.soExtension}}
+          path: ${{runner.workspace}}/out/build/*.dll
 
-      - name: Upload native shared library debug information
+      - name: Upload Linux shared libraries
         uses: actions/upload-artifact@v2
-        if: ${{matrix.uploadArtifacts && matrix.os == 'windows'}}
+        if: ${{matrix.uploadArtifacts}}
         with:
           name: ${{matrix.arch}}-${{matrix.os}}
-          path: ${{runner.workspace}}/out/build/${{matrix.soPrefix}}JANGLE.pdb
+          path: ${{runner.workspace}}/out/build/*.so
 
+      - name: Upload OSX shared libraries
+        uses: actions/upload-artifact@v2
+        if: ${{matrix.uploadArtifacts}}
+        with:
+          name: ${{matrix.arch}}-${{matrix.os}}
+          path: ${{runner.workspace}}/out/build/*.dylib
 
   package:
     name: Package JANGLE
@@ -173,3 +171,77 @@ jobs:
         with:
           name: multi
           path: ${{runner.workspace}}/out/JANGLE.jar
+
+  test:
+    name: Test JANGLE
+    needs: package
+    
+    runs-on: ${{matrix.environment}}
+
+    env:
+      vcpkgResponseFile: ${{github.workspace}}/vcpkg-dependencies
+
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows, linux, osx]
+        javaVersion: [8]
+
+        include:
+          - os: windows
+            arch: x64
+            environment: windows-2019
+            buildType: Release
+            javaVersion: 8
+
+          - os: windows
+            arch: x64
+            environment: windows-2019
+            buildType: Debug
+            javaVersion: 8
+            
+          - os: linux
+            arch: x64
+            environment: ubuntu-18.04
+            buildType: Release
+            javaVersion: 8
+            displayWrapper: xvfb-run
+
+          - os: osx
+            arch: x64
+            environment: macos-latest
+            buildType: Release
+            javaVersion: 8
+
+    steps:
+      - name: Checkout source code
+        uses: actions/checkout@v2
+
+      # Would also install these Ubuntu if they weren't installed by other steps: cmake, ninja-build
+      - name: Set up Ubuntu packages
+        run: sudo apt-get install curl libgl1-mesa-dev libx11-dev xvfb 
+        if: ${{startsWith(matrix.environment, 'ubuntu')}}
+
+      - name: Set up JDK
+        uses: actions/setup-java@v1
+        with:
+          java-version: ${{matrix.javaVersion}}
+          architecture: ${{matrix.arch}}
+
+      - name: Download all artifacts
+        uses: actions/download-artifact@v2
+        with:
+          path: ${{runner.workspace}}/artifacts
+
+      - name: List artifacts
+        run: ls --recursive ${{runner.workspace}}/artifacts
+
+      # The classpath separator character is different on Windows (;) versus other platforms (:). One way to avoid
+      # using it is to pass * as the classpath, which causes java to put all .jar files in a directory in the classpath.
+      # This requires avoiding bash's globbing, which would substitute the * before java saw it.
+      - name: Run Java tests
+        run: |
+          set -o noglob
+          ${{matrix.displayWrapper || ''}} java -cp * JavaSmokeTest
+        shell: bash
+        working-directory: ${{runner.workspace}}/artifacts/${{matrix.arch}}-${{matrix.os}}
