@@ -23,10 +23,9 @@ jobs:
           - os: windows
             arch: x64
             environment: windows-2019
-            buildType: Release
+            buildType: RelWithDebInfo
             javaVersion: 8
-            uploadNative: true
-            uploadJar: true
+            uploadArtifacts: true
             soPrefix: ''
             soExtension: dll
 
@@ -43,7 +42,7 @@ jobs:
             environment: ubuntu-18.04
             buildType: Release
             javaVersion: 8
-            uploadNative: true
+            uploadArtifacts: true
             displayWrapper: xvfb-run
             soPrefix: lib
             soExtension: so
@@ -53,7 +52,7 @@ jobs:
             environment: macos-latest
             buildType: Release
             javaVersion: 8
-            uploadNative: true
+            uploadArtifacts: true
             soPrefix: lib
             soExtension: dylib
 
@@ -113,17 +112,24 @@ jobs:
 
       - name: Upload JAR file
         uses: actions/upload-artifact@v2
-        if: ${{matrix.uploadJar}}
+        if: ${{matrix.uploadArtifacts}}
         with:
-          name: jar
+          name: ${{matrix.arch}}-${{matrix.os}}
           path: ${{runner.workspace}}/out/build/JANGLE.jar
 
       - name: Upload native shared library
         uses: actions/upload-artifact@v2
-        if: ${{matrix.uploadNative}}
+        if: ${{matrix.uploadArtifacts}}
         with:
           name: ${{matrix.arch}}-${{matrix.os}}
           path: ${{runner.workspace}}/out/build/${{matrix.soPrefix}}JANGLE.${{matrix.soExtension}}
+
+      - name: Upload native shared library debug information
+        uses: actions/upload-artifact@v2
+        if: ${{matrix.uploadArtifacts && matrix.os == "windows"}}
+        with:
+          name: ${{matrix.arch}}-${{matrix.os}}
+          path: ${{runner.workspace}}/out/build/${{matrix.soPrefix}}JANGLE.pdb
 
 
   package:
@@ -145,13 +151,19 @@ jobs:
 
       - name: Add to zip file
         run: |
-          mkdir -p ${{runner.workspace}}/out/resources/android/opengl
+          mkdir -p ${{runner.workspace}}/out/resources/android/opengl/x64-windows
+          cp ${{runner.workspace}}/artifacts/x64-windows/JANGLE.dll ${{runner.workspace}}/out/resources/android/opengl/x64-windows/
+
+          mkdir -p ${{runner.workspace}}/out/resources/android/opengl/x64-linux
+          cp ${{runner.workspace}}/artifacts/x64-linux/libJANGLE.so ${{runner.workspace}}/out/resources/android/opengl/x64-linux/
+
+          mkdir -p ${{runner.workspace}}/out/resources/android/opengl/x64-osx
+          cp ${{runner.workspace}}/artifacts/x64-osx/libJANGLE.dylib ${{runner.workspace}}/out/resources/android/opengl/x64-osx/
+
           mkdir -p ${{runner.workspace}}/out/resources/META-INF
-          cp -r ${{runner.workspace}}/artifacts/x64-* ${{runner.workspace}}/out/resources/android/opengl/
           cp ${{github.workspace}}/LICENSE* ${{runner.workspace}}/out/resources/META-INF
 
           cp ${{runner.workspace}}/artifacts/jar/JANGLE.jar ${{runner.workspace}}/out/
-
           pushd ${{runner.workspace}}/out/resources/
           zip -r ${{runner.workspace}}/out/JANGLE.jar *
           popd
