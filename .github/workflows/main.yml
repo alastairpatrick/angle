@@ -91,6 +91,7 @@ jobs:
 
       - name: List build directory
         run: ls ${{runner.workspace}}/out/build/
+        shell: bash
 
       - name: Run native tests
         run: ${{matrix.displayWrapper || ''}} ${{runner.workspace}}/out/build/angle_easy_tests
@@ -137,7 +138,7 @@ jobs:
           path: ${{runner.workspace}}/artifacts
 
       - name: List artifacts
-        run: ls --recursive ${{runner.workspace}}/artifacts
+        run: ls -R ${{runner.workspace}}/artifacts
 
       - name: Add to zip file
         run: |
@@ -217,7 +218,8 @@ jobs:
           path: ${{runner.workspace}}/artifacts
 
       - name: List artifacts
-        run: ls --recursive ${{runner.workspace}}/artifacts
+        run: ls -R ${{runner.workspace}}/artifacts
+        shell: bash
 
       - name: Prepare Java tests
         run: |
