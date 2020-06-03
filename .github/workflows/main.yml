@@ -110,18 +110,18 @@ jobs:
         shell: bash
         working-directory: ${{runner.workspace}}/out/build
 
-      - name: Upload android.opengl JAR file
+      - name: Upload JAR file
         uses: actions/upload-artifact@v2
         if: ${{matrix.uploadArtifact}}
         with:
           name: android.opengl-${{matrix.arch}}-${{matrix.os}}
           path: ${{runner.workspace}}/out/build/android.opengl.jar
 
-      - name: Upload android.opengl native shared library
+      - name: Upload native shared library
         uses: actions/upload-artifact@v2
         if: ${{matrix.uploadArtifact}}
         with:
-          name: android.opengl-${{matrix.arch}}-${{matrix.os}}
+          name: ${{matrix.arch}}-${{matrix.os}}
           path: ${{runner.workspace}}/out/build/${{matrix.soPrefix}}android.opengl.${{matrix.soExtension}}
 
 
@@ -137,7 +137,23 @@ jobs:
       - name: Download all artifacts
         uses: actions/download-artifact@v2
         with:
-          path: ${{runner.workspace}}/out/build
+          path: ${{runner.workspace}}/jar-image
 
-      - name: List artifacts directory
-        run: ls ${{runner.workspace}}/out/build
+      - name: List artifacts
+        run: ls --recursive ${{runner.workspace}}/jar-image
+
+      - name: Add to zip file
+        run: |
+          set -o noglob
+
+          mkdir -p ${{runner.workspace}}/out/
+          cp ${{runner.workspace}}/jar-image/x64-windows/android.opengl.jar ${{runner.workspace}}/out/
+          find ${{runner.workspace}}/jar-image/ -name *.jar -type f -delete
+
+          zip -r ${{runner.workspace}}/out/android.opengl.jar ${{runner.workspace}}/jar-image/
+
+      - name: Upload multi-platform JAR file
+        uses: actions/upload-artifact@v2
+        with:
+          name: android.opengl
+          path: ${{runner.workspace}}/out/android.opengl.jar
