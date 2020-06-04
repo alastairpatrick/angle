@@ -250,6 +250,11 @@ jobs:
         with:
           path: ${{runner.workspace}}/artifacts
 
+        # This action configures the github maven repository used by the maven deploy step below.
+      - uses: actions/setup-java@v1
+        with:
+          java-version: 1.8
+          
       - name: Publish package
         run: mvn -B deploy -Dfile=${{runner.workspace}}/artifacts/multi/JANGLE.jar -DpomFile=${{github.workspace}}/pom.xml
         env:
