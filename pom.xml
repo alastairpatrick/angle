@@ -6,12 +6,4 @@
   <artifactId>JANGLE</artifactId>
   <version>0.0.1-SNAPSHOT</version>
   <description>ANGLE / OpenGL ES bindings for Java</description>
-  
-  <distributionManagement>
-    <snapshotRepository>
-      <id>github</id>
-      <name>JANGLE Snapshot Maven Packages</name>
-      <url>https://maven.pkg.github.com/alastairpatrick/jangle</url>
-    </snapshotRepository>    
-  </distributionManagement>
 </project>

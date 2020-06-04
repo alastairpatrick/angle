@@ -256,6 +256,6 @@ jobs:
           java-version: 1.8
           
       - name: Publish package
-        run: mvn -B deploy:deploy-file -Dfile=${{runner.workspace}}/artifacts/multi/JANGLE.jar -DpomFile=${{github.workspace}}/pom.xml
+        run: mvn -B deploy:deploy-file -Dfile=${{runner.workspace}}/artifacts/multi/JANGLE.jar -DpomFile=${{github.workspace}}/pom.xml -DrepositotyId=github -Durl=https://maven.pkg.github.com/alastairpatrick/jangle
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
