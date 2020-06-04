@@ -131,7 +131,7 @@ jobs:
       - name: Checkout source code
         uses: actions/checkout@v2
       
-      - name: Download all artifacts
+      - name: Download artifacts
         uses: actions/download-artifact@v2
         with:
           path: ${{runner.workspace}}/artifacts
@@ -211,7 +211,7 @@ jobs:
           java-version: ${{matrix.javaVersion}}
           architecture: ${{matrix.arch}}
 
-      - name: Download all artifacts
+      - name: Download artifacts
         uses: actions/download-artifact@v2
         with:
           path: ${{runner.workspace}}/artifacts
@@ -234,3 +234,23 @@ jobs:
           ${{matrix.displayWrapper || ''}} java -cp * JavaSmokeTest
         shell: bash
         working-directory: ${{runner.workspace}}/out
+
+  publish:
+    name: Publish JANGLE snapshot
+    needs: test
+    if: ${{github.event_name == 'push' && github.ref == 'refs/heads/master'}}
+    runs-on: ubuntu-18.04
+
+    steps:
+      - name: Checkout source code
+        uses: actions/checkout@v2
+
+      - name: Download artifacts
+        uses: actions/download-artifact@v2
+        with:
+          path: ${{runner.workspace}}/artifacts
+
+      - name: Publish package
+        run: mvn -B deploy -Dfile=${{runner.workspace}}/artifacts/multi/JANGLE.jar -DpomFile=${{github.workspace}}/pom.xml
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
